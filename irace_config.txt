@@ -1,0 +1,3 @@
+parameterFile = "./geneticParameters.txt"
+trainInstancesDir = "./irace-big-instances"
+maxExperiments = 1000

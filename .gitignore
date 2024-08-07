@@ -1,0 +1,53 @@
+# Custom
+results/__pycache__
+venv
+presentation/index_files
+presentation/index.html
+.vscode
+bin/tests
+bin/exec
+results/.python-version
+results/*.png
+/*.txt
+!geneticParameters.txt
+!irace_config.txt
+/*.csv
+.Rhistory
+irace.Rdata
+*stderr
+*stdout
+venv
+.ipynb_checkpoints
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app

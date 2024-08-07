@@ -1,0 +1,10 @@
+- População inicial: Metade aleatória, 1/4 CI Approach, 1/4 Vizinho Mais Próximo approach
+- Avalia
+- Exclui elitismo/ordenação
+- Laço por x gerações
+    - percorre a população: se sorteio < taxa crossover
+        - Seleciona outro pai (p2)
+        - Hoje: Roleta russa. Outra opçao é sortear z elementos e ficar com o melhor
+        - Realizar crossover com OX1 e gerar 2 filhos
+            - Passam para as proximas gerações os 2 melhores dentre as 4 opções (pai1, pai2, filho1, filho2)
+    - Percorre a população para fazer mutação, sempre aceita

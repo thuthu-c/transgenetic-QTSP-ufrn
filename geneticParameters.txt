@@ -1,0 +1,11 @@
+# Parameter 1: max_evaluations
+max_evaluations " " i (50000, 200000)
+
+# Parameter 2: population_size
+population_size " " i (10, 200)
+
+# Parameter 3: crossover_rate
+crossover_rate " " r (0.1, 0.9)
+
+# Parameter 4: mutation_rate
+mutation_rate " " r (0.1, 0.5)

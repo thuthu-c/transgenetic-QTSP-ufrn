@@ -191,7 +191,7 @@ std::vector<std::vector<int>> Memetic::initializeNearestNeighbors(int population
     }
 
     // Trim the population to the desired size
-    if (population.size() > populationSize) {
+    if (population.size() > (unsigned long long)populationSize) {
         population.erase(population.begin() + populationSize, population.end());
     }
 
@@ -449,10 +449,10 @@ std::pair<int, std::vector<int>> Memetic::twoOpt(Graph &graph, std::pair<int, st
 
     while(improved && this->numEvaluation < this->maxEvaluations) {
         improved = false;
-        for(int i = 1; i < tour.second.size() - 1; ++i) {
+        for(auto i{1u}; i < tour.second.size() - 1; ++i) {
             bool localImprovement = false;
 
-            for(int j = i + 1; j < tour.second.size(); ++j) {
+            for(auto j = i + 1; j < tour.second.size(); ++j) {
                 std::pair<int, std::vector<int>> newTour = swap(tour, i, j);
                 newTour.first = this->eval(newTour.second, graph);
                 if(newTour.first < tour.first) {

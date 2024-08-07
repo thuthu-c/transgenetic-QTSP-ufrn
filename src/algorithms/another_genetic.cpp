@@ -51,7 +51,7 @@ void AnotherGenetic::initializePopulation() {
         visited[std::get<2>(startTriple)] = true;
 
         // Continue constructing the solution
-        while (solution.size() < n) {
+        while (solution.size() < (unsigned long long int)n) {
             std::vector<std::tuple<int, int, int>> restrictedCandidateList;
 
             // Create the Restricted Candidate List (RCL) with triples that connect to the current tour
@@ -108,7 +108,7 @@ void AnotherGenetic::initializePopulation() {
         }
 
         // Make sure the solution is a valid circular tour
-        if (solution.size() > n) {
+        if (solution.size() > (unsigned long long int)n) {
             solution.resize(n);
         }
         //performing local search
@@ -161,7 +161,7 @@ void AnotherGenetic::initializePopulation() {
 }
 
 void AnotherGenetic::transgenesis(Individual& individual) {
-    
+    if(individual.cost)  return;
 }
 
 std::pair<AnotherGenetic::Individual, AnotherGenetic::Individual> AnotherGenetic::tournamentSelection(const std::vector<AnotherGenetic::Individual>& population) {

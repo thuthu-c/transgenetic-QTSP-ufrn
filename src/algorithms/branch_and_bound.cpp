@@ -28,7 +28,7 @@ int getLowerBound(Graph& graph,const solution& solucao){
     int n=solucao.falta.size();
     int total = 0;
 
-    for(int i = 1;i<solucao.ordem.size()-1;i++){//pegamos todas as arestas que já estão
+    for(auto i{1u};i<solucao.ordem.size()-1;i++){//pegamos todas as arestas que já estão
         total+=graph.custo[solucao.ordem[i-1]][solucao.ordem[i]][solucao.ordem[i+1]];
     }
     if(n>=2){//lower bound
@@ -99,7 +99,7 @@ vector<int> getOrdem(Graph&graph,const solution& solucao){
     int ultimo = tour[tour.size()-1];
     set<int> visto;
     for(auto k:tour)visto.insert(k);
-    while(tour.size()<graph.getMaxM())
+    while(tour.size()<(unsigned long long)graph.getMaxM())
     {
         std::pair<int, int> menor = getmin(visto,penultimo, ultimo, graph);
         penultimo = ultimo;

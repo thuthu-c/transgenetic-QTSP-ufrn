@@ -26,11 +26,11 @@ class crazyHeap{
 				int left = 2*id+1;
 				int right = 2*id+2;
 				
-				if(left>=heap.size())break;
+				if((unsigned long long int)left>=heap.size())break;
 
 				int teste;
 				
-				if(right>=heap.size()){
+				if((unsigned long long int)right>=heap.size()){
 					teste = left;
 				}
 				else{
@@ -57,7 +57,7 @@ class crazyHeap{
 
 			heap[0] = ultimo; //coloco em cima;
 
-			int id = 0;
+			// int id = 0;
 			
 			heapify(0);
 		}

@@ -188,25 +188,25 @@ void run(TspSolver *solver, std::string graphFilename, std::ofstream &file)
 int Benchmark::evaluate()
 {
     std::vector<TspSolver *> algorithms;
-    BruteForce *bf = new BruteForce();
-    Tabu* tabu = new Tabu(this->tabuTime,this->tabuAspirationTime,this->tabuMaxIter);
-    NearestNeighborhood *nb = new NearestNeighborhood();
-    CheapestInsertion *ci = new CheapestInsertion();
-    BranchAndBound *bnb = new BranchAndBound();
-
-    GeneticImproved *gi = new GeneticImproved(
-        this->maxEvaluations,
-        this->populationSize,
-        this->crossoverRate,
-        this->mutationRate
-    );
-
-    Memetic *mm = new Memetic(
-        this->maxEvaluations,
-        this->populationSize,
-        this->crossoverRate,
-        this->mutationRate
-    );
+//     BruteForce *bf = new BruteForce();
+//     Tabu* tabu = new Tabu(this->tabuTime,this->tabuAspirationTime,this->tabuMaxIter);
+//     NearestNeighborhood *nb = new NearestNeighborhood();
+//     CheapestInsertion *ci = new CheapestInsertion();
+//     BranchAndBound *bnb = new BranchAndBound();
+// 
+//     GeneticImproved *gi = new GeneticImproved(
+//         this->maxEvaluations,
+//         this->populationSize,
+//         this->crossoverRate,
+//         this->mutationRate
+//     );
+// 
+//     Memetic *mm = new Memetic(
+//         this->maxEvaluations,
+//         this->populationSize,
+//         this->crossoverRate,
+//         this->mutationRate
+//     );
 
     AnotherGenetic *ag = new AnotherGenetic(
         this->populationSize,

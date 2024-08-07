@@ -113,7 +113,7 @@ std::vector<int> CheapestInsertion::run(Graph &graph)
         int bestInsertionIndex = -1;
 
         for (int k : verticesToCheck) {
-            for (int i = 0; i < tour.size(); i++) {
+            for (auto i{0u}; i < tour.size(); i++) {
                 std::vector<int> tmpTour = tour;
                 tmpTour.insert(tmpTour.begin() + i, k);
 

@@ -4,7 +4,7 @@ CC = g++
 CPPFLAGS = -O3 -gdwarf-3 -W -Wall -pedantic -std=c++17
 MAIN = main.o
 
-OBJS = graph.o graph_generator.o nearest_neighborhood.o cheapest_insertion.o brute_force.o benchmark.o graphio.o memetic.o branch_and_bound.o tabu.o genetic_improved.o random.o another_genetic.o
+OBJS = graph.o graph_generator.o nearest_neighborhood.o cheapest_insertion.o brute_force.o benchmark.o graphio.o memetic.o branch_and_bound.o tabu.o genetic_improved.o random.o tabu_memetic.o
 TESTOBJECTS = test_base.o test_graph.o test_graph_generator.o test_nearest_neighborhood.o test_brute_force.o test_benchmark.o test_graphio.o test_cheapest_insertion.o test_memetic.o
 
 main: $(MAIN) $(OBJS)
@@ -45,8 +45,8 @@ test_memetic.o: include/algorithms/memetic.h
 cheapest_insertion.o: include/algorithms/cheapest_insertion.h
 	$(CC) $(CPPFLAGS) -c src/algorithms/cheapest_insertion.cpp
 
-another_genetic.o: include/algorithms/another_genetic.h
-	$(CC) $(CPPFLAGS) -c src/algorithms/another_genetic.cpp
+tabu_memetic.o: include/algorithms/tabu_memetic.h
+	$(CC) $(CPPFLAGS) -c src/algorithms/tabu_memetic.cpp
 
 main.o:
 	$(CC) $(CPPFLAGS) -c src/main.cpp

@@ -1,5 +1,5 @@
-#ifndef _AG_H_
-#define _AG_H_
+#ifndef _TSM_H_
+#define _TSM_H_
 
 #include "../data_structures/graph.h"
 #include "tsp_solver.h"
@@ -7,11 +7,11 @@
 #include <algorithm>
 #include <random>
 
-class AnotherGenetic : public TspSolver
+class TabuMemetic : public TspSolver
 {
 public:
-    AnotherGenetic(int popSize, int maxGen, double mutRate, double crossRate, bool local_search);
-    ~AnotherGenetic();
+    TabuMemetic(int popSize, int maxGen, double mutRate, double crossRate);
+    ~TabuMemetic();
 
     std::vector<int> run(Graph& graph) override;
     struct Individual {
@@ -22,7 +22,6 @@ public:
     // Make calculateTour public for testing
     int calculateTour(const std::vector<int>& tour);
     Individual best_ini;
-    bool has_local_search() const;
 
 private:
 
@@ -30,7 +29,6 @@ private:
     int maxGenerations;
     double mutationRate;
     double crossoverRate;
-    bool ls;
     std::vector<Individual> population;
     std::vector<Individual> ini_population;
     Graph* graph;
@@ -41,6 +39,7 @@ private:
     Individual crossover(const Individual& parent1, const Individual& parent2);
     void mutate(Individual& individual);
     void transgenesis(Individual& individual);
+    void apply_tabu_search(Individual& ind);
 };
 
 #endif

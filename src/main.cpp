@@ -3,9 +3,9 @@
 #include<fstream>
 using namespace std;
 
-#include "../include/algorithms/another_genetic.h"
+#include "../include/algorithms/tabu_memetic.h"
 #include <climits>
-#include<string>
+#include <string>
 
 //stdout is not working due to irace, we can debug by printing to a file
 void debug(std::string st){
@@ -17,9 +17,9 @@ void debug(std::string st){
 
 
 //lembra de mudar o parameterFile do irace_config.xml também
-bool isGenetic = true;//gambiarra por enquanto depois refatoramos melhor
+bool isMemetic = true;//gambiarra por enquanto depois refatoramos melhor
 
-void runGenetic(int argc, char *argv[]){
+void runMemetic(int argc, char *argv[]){
     if(argc == 1){
         Graph graph(3); // Assuming 5 nodes for this example
 
@@ -40,14 +40,14 @@ void runGenetic(int argc, char *argv[]){
         double crossoverRate = 0.2;
 
         // Initialize genetic algorithm
-        AnotherGenetic geneticAlgorithm(populationSize, numGenerations, mutationRate, crossoverRate);
+        TabuMemetic taMeAlgorithm(populationSize, numGenerations, mutationRate, crossoverRate);
 
         // Run the genetic algorithm
-        std::vector<int> bestTour = geneticAlgorithm.run(graph);
+        std::vector<int> bestTour = taMeAlgorithm.run(graph);
         std::cout<<"Tour size: "<<bestTour.size()<<std::endl;
 
         // Calculate and print the cost of the best tour
-        int bestCost = geneticAlgorithm.calculateTour(bestTour);
+        int bestCost = taMeAlgorithm.calculateTour(bestTour);
         if(bestCost < INT_MAX)std::cout << "Best tour cost: " << bestCost << std::endl;
         else std::cout<<"There is no valid tour for this graph :("<<std::endl;
 
@@ -143,7 +143,7 @@ void runTabu(int argc, char *argv[]){
 
 int main(int argc, char *argv[])
 {
-    if(isGenetic) runGenetic(argc,argv);
+    if(isMemetic) runMemetic(argc,argv);
     else runTabu(argc,argv);
     
     return 0;

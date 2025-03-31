@@ -1,18 +1,20 @@
-#include "../../include/algorithms/another_genetic.h"
+#include "../../include/algorithms/tabu_memetic.h"
 #include <numeric>
 #include <iostream>
 #include <random>
 #include <algorithm>
 #include <climits>
+#include <unordered_set>
+#include <string>
 
 using namespace std;
 
-AnotherGenetic::AnotherGenetic(int popSize, int maxGen, double mutRate, double crossRate, bool local_search)
-    : populationSize(popSize), maxGenerations(maxGen), mutationRate(mutRate) , crossoverRate(crossRate), ls(local_search){}
+TabuMemetic::TabuMemetic(int popSize, int maxGen, double mutRate, double crossRate)
+    : populationSize(popSize), maxGenerations(maxGen), mutationRate(mutRate) , crossoverRate(crossRate){}
 
-AnotherGenetic::~AnotherGenetic() {}
+TabuMemetic::~TabuMemetic() {}
 
-void AnotherGenetic::initializePopulation() {
+void TabuMemetic::initializePopulation() {
     population.clear();
     b_ini_c = INT_MAX;
     for (int i = 0; i < populationSize; ++i) {
@@ -115,32 +117,32 @@ void AnotherGenetic::initializePopulation() {
         //performing local search
         std::vector<int> currentTour = solution;
 
-        if(ls){            
-            bool improvement = true;
-            int bestCost = calculateTour(currentTour);
-            // std::cout<<"Best cost before ls: "<<bestCost;
-            while (improvement) {
-                improvement = false;
+           
+        bool improvement = true;
+        int bestCost = calculateTour(currentTour);
+        // std::cout<<"Best cost before ls: "<<bestCost;
+        while (improvement) {
+            improvement = false;
 
-                for (size_t i = 0; i < currentTour.size() - 1; ++i) {
-                    for (size_t j = i + 1; j < currentTour.size(); ++j) {
-                        // std::cout<<"Checking ("<<i<<','<<j<<")\n";
-                        std::vector<int> newTour = currentTour;
-                        std::swap(newTour[i], newTour[j]);
-                        int newCost = calculateTour(newTour);
-                        // std::cout<<"Current new cost: "<<newCost<<std::endl;
+            for (size_t i = 0; i < currentTour.size() - 1; ++i) {
+                for (size_t j = i + 1; j < currentTour.size(); ++j) {
+                    // std::cout<<"Checking ("<<i<<','<<j<<")\n";
+                    std::vector<int> newTour = currentTour;
+                    std::swap(newTour[i], newTour[j]);
+                    int newCost = calculateTour(newTour);
+                    // std::cout<<"Current new cost: "<<newCost<<std::endl;
 
-                        if (newCost < bestCost) {
-                            // std::cout<<"Improved!\n"<<bestCost<<" to "<<newCost<<std::endl;
-                            currentTour = newTour;
-                            bestCost = newCost;
-                            improvement = true;
-                        }
+                    if (newCost < bestCost) {
+                        // std::cout<<"Improved!\n"<<bestCost<<" to "<<newCost<<std::endl;
+                        currentTour = newTour;
+                        bestCost = newCost;
+                        improvement = true;
                     }
                 }
-            // std::cout<<"Best so far: "<<bestCost<<std::endl;
             }
+        // std::cout<<"Best so far: "<<bestCost<<std::endl;
         }
+        
         
         individual.tour = currentTour;
         individual.cost = calculateTour(individual.tour);
@@ -152,30 +154,15 @@ void AnotherGenetic::initializePopulation() {
         population.push_back(individual);
         // std::cout<<"We have "<<population.size()<<" individuals of "<<populationSize<<"\n";
     }
-    
-//     for (int i = 0; i < populationSize/2; ++i) {
-//         Individual individual;
-//         int n = graph->getMaxM();
-//         individual.tour.resize(n);
-//         std::iota(individual.tour.begin(), individual.tour.end(), 0);
-// 
-//         // Shuffle to create a random permutation
-//         std::random_device rd;
-//         std::mt19937 gen(rd());
-//         std::shuffle(individual.tour.begin(), individual.tour.end(), gen);
-// 
-//         individual.cost = calculateTour(individual.tour);
-//         population.push_back(individual);
-//     }
     ini_population = population;
 
 }
 
-void AnotherGenetic::transgenesis(Individual& individual) {
+void TabuMemetic::transgenesis(Individual& individual) {
     if(individual.cost) return;
 }
 
-std::pair<AnotherGenetic::Individual, AnotherGenetic::Individual> AnotherGenetic::tournamentSelection(const std::vector<AnotherGenetic::Individual>& population) {
+std::pair<TabuMemetic::Individual, TabuMemetic::Individual> TabuMemetic::tournamentSelection(const std::vector<TabuMemetic::Individual>& population) {
     std::random_device rd;
     std::mt19937 g(rd());
     std::vector<Individual> tournament;
@@ -201,7 +188,7 @@ std::pair<AnotherGenetic::Individual, AnotherGenetic::Individual> AnotherGenetic
     return std::make_pair(best, sec);
 }
 
-AnotherGenetic::Individual AnotherGenetic::crossover(const Individual& parent1, const Individual& parent2) {
+TabuMemetic::Individual TabuMemetic::crossover(const Individual& parent1, const Individual& parent2) {
     std::random_device rd;
     std::mt19937 g(rd());
     std::uniform_real_distribution<> disr(0.0, 1.0);
@@ -240,7 +227,7 @@ AnotherGenetic::Individual AnotherGenetic::crossover(const Individual& parent1, 
 }
 
 
-void AnotherGenetic::mutate(Individual& individual) {
+void TabuMemetic::mutate(Individual& individual) {
     std::random_device rd;
     std::mt19937 g(rd());
     std::uniform_real_distribution<> dis(0.0, 1.0);
@@ -254,7 +241,7 @@ void AnotherGenetic::mutate(Individual& individual) {
     }
 }
 
-int AnotherGenetic::calculateTour(const std::vector<int>& tour) {
+int TabuMemetic::calculateTour(const std::vector<int>& tour) {
     int n = tour.size();
     int totalCost = 0;
     
@@ -284,7 +271,7 @@ int AnotherGenetic::calculateTour(const std::vector<int>& tour) {
     return totalCost;
 }
 
-std::vector<int> AnotherGenetic::run(Graph& graphInput) {
+std::vector<int> TabuMemetic::run(Graph& graphInput) {
     graph = &graphInput;
     initializePopulation();
 
@@ -301,8 +288,8 @@ std::vector<int> AnotherGenetic::run(Graph& graphInput) {
             child1.cost = calculateTour(child1.tour);
             child2.cost = calculateTour(child2.tour);
 
-            // if(child1.cost < best.cost) best = child1;
-            // if(child2.cost < best.cost) best = child2;
+            apply_tabu_search(child1);
+            apply_tabu_search(child2);
             
             population.push_back(child1);
             population.push_back(child2);
@@ -317,7 +304,33 @@ std::vector<int> AnotherGenetic::run(Graph& graphInput) {
                            })->tour;
 }
 
+// Tabu Search Implementation
 
-bool AnotherGenetic::has_local_search() const{
-    return ls;
+void TabuMemetic::apply_tabu_search(Individual& ind) {
+    int best_cost = ind.cost;
+    std::vector<int> best_tour = ind.tour;
+    std::set<std::vector<int>> tabu_list;
+
+    for (int i = 0; i < 10/*tabu_tenure*/; ++i) {
+        for (size_t j = 0; j < ind.tour.size(); ++j) {
+            for (size_t k = j + 1; k < ind.tour.size(); ++k) {
+                std::vector<int> new_tour = ind.tour;
+                std::swap(new_tour[j], new_tour[k]);
+                int new_cost = calculateTour(new_tour);
+
+                if (new_cost < best_cost && tabu_list.find(new_tour) == tabu_list.end()) {
+                    best_cost = new_cost;
+                    best_tour = new_tour;
+                }
+            }
+        }
+        // tabu_list.insert(std::to_string(best_tour));
+        if (tabu_list.size() > static_cast<size_t>(10/*tabu_tenure*/)) {
+            tabu_list.erase(tabu_list.begin());
+        }
+    }
+    ind.tour = best_tour;
+    ind.cost = best_cost;
 }
+
+

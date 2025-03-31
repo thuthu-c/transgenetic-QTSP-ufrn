@@ -15,6 +15,7 @@
 #include "../../include/benchmark/benchmark.h"
 #include "../../include/algorithms/genetic_improved.h"
 #include "../../include/algorithms/another_genetic.h"
+#include "../../include/algorithms/tabu_memetic.h"
 
 Benchmark::Benchmark(
     int maxEvaluations,
@@ -101,12 +102,26 @@ void writeResult(
     int numVertex,
     long double time,
     std::vector<int> &path,
-    int cost)
+    int cost,
+    std::vector<int> &path_ini,
+    int cost_ini)
 {
     file << algorithm << ";";
     file << execution << ";";
     file << filename << ";";
     file << numVertex << ";";
+
+    for (int i = 0; i < (int)path_ini.size(); i++)
+    {
+        file << path_ini[i];
+        if (i != (((int)path_ini.size()) - 1))
+        {
+            file << ",";
+        }
+    }
+    file << ";";
+    file << cost_ini << ";";
+    file << time << "ms;";
 
     for (int i = 0; i < (int)path.size(); i++)
     {
@@ -117,9 +132,7 @@ void writeResult(
         }
     }
 
-    file << ";";
-    file << time << ";";
-    file << cost << "\n";
+    file  << ';' << cost << "\n";
 }
 
 std::string getAlgorithmName(TspSolver *solver)
@@ -145,7 +158,10 @@ std::string getAlgorithmName(TspSolver *solver)
     else if(dynamic_cast<GeneticImproved*>(solver)){
         return "GeneticImproved";
     }
+    else if(dynamic_cast<TabuMemetic*>(solver)){
+        return "Tabu Search Memetic";
 
+    }
     return "AnotherGenetic";
 }
 
@@ -159,7 +175,7 @@ void run(TspSolver *solver, std::string graphFilename, std::ofstream &file)
 
     for (int i = 1; i <= 30; i++)
     {
-        std::cout << "Start running algorithm " << solverName << " for " << graph.getMaxM() << "in execution " << i << std::endl;
+        // std::cout << "Start running algorithm " << solverName << " for " << graph.getMaxM() << "in execution " << i << std::endl;
 
         // https://en.cppreference.com/w/cpp/chrono/duration/duration_cast
         auto start = std::chrono::high_resolution_clock::now();
@@ -178,11 +194,14 @@ void run(TspSolver *solver, std::string graphFilename, std::ofstream &file)
             graph.getMaxM(),
             miliseconds,
             minPath,
-            cost
+            cost,
+            solver->b_ini_p,
+            solver->b_ini_c
         );
 
-        std::cout << "End " << solverName << " execution. It took " << miliseconds << " miliseconds" << std::endl;
+        // std::cout << "End " << solverName << " execution. It took " << miliseconds << " miliseconds" << std::endl;
     }    
+    std::cout<<"Done "<<solverName<<" for "<<graphFilename<<std::endl;
 }
 
 int Benchmark::evaluate()
@@ -207,45 +226,60 @@ int Benchmark::evaluate()
 //         this->crossoverRate,
 //         this->mutationRate
 //     );
-
-    AnotherGenetic *ag = new AnotherGenetic(
+// 
+//     AnotherGenetic *agls = new AnotherGenetic(
+//         this->populationSize,
+//         this->maxEvaluations,
+//         this->mutationRate,
+//         this->crossoverRate,
+//         true
+//     );
+//     AnotherGenetic *ag = new AnotherGenetic(
+//         this->populationSize,
+//         this->maxEvaluations,
+//         this->mutationRate,
+//         this->crossoverRate,
+//         false
+//     );
+    TabuMemetic *tm = new TabuMemetic(
         this->populationSize,
         this->maxEvaluations,
         this->mutationRate,
         this->crossoverRate
     );
-    
     // algorithms.push_back(ci);
     // algorithms.push_back(mm);
     // algorithms.push_back(gi);
     // algorithms.push_back(nb);
     // algorithms.push_back(ci);
-    algorithms.push_back(ag);
-    //algorithms.push_back(tabu);
-    //algorithms.push_back(bnb);
-    //algorithms.push_back(bf);*/
+    // algorithms.push_back(tabu);
+    // algorithms.push_back(bnb);
+    // algorithms.push_back(bf);
+    // algorithms.push_back(ag);
+    // algorithms.push_back(agls);
+    algorithms.push_back(tm);
 
-    std::vector<std::string> graphsPath = generateGraphs(5, 14);
+    // std::vector<std::string> graphsPath = generateGraphs(5, 14);
 
     // add header to csv
     std::ofstream outputFile;
     outputFile.open("result.csv", std::ios::app);
-    outputFile << "algorithm;execution;filename;num_vertex;min_path;milisec;cost\n";
+    outputFile << "algorithm;execution;filename;num_vertex;initial_path;initial_cost;milisec;min_path;cost\n";
     outputFile.close();
-
-    // run algorithms for every graph instances
-    for (auto algorithm : algorithms)
-    {
-        for (std::string graphPath : graphsPath)
-        {
-            outputFile.open("result.csv", std::ios::app);
-            run(algorithm, graphPath, outputFile);
-            outputFile.close();
-        }
-    }
+// 
+//     // run algorithms for every graph instances
+//     for (auto algorithm : algorithms)
+//     {
+//         for (std::string graphPath : graphsPath)
+//         {
+//             outputFile.open("result.csv", std::ios::app);
+//             run(algorithm, graphPath, outputFile);
+//             outputFile.close();
+//         }
+//     }
 
     // running big graphs for big instances (ignoring brute force)
-    graphsPath = generateGraphs(50, 50);
+    std::vector<std::string> graphsPath = generateGraphs(50, 50);
 
     for (auto generated : generateGraphs(75, 75))
     {

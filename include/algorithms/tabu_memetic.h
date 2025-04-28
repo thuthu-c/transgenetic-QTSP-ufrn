@@ -20,7 +20,7 @@ public:
     };
 
     // Make calculateTour public for testing
-    int calculateTour(const std::vector<int>& tour);
+    int calculateTour(const int& x, const int& y, const Individual& ind);
     Individual best_ini;
 
 private:

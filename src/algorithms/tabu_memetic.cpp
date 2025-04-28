@@ -115,21 +115,21 @@ void TabuMemetic::initializePopulation() {
             solution.resize(n);
         }
         //performing local search
-        std::vector<int> currentTour = solution;
+        Individual currentTour{solution, 0};
 
            
         bool improvement = true;
-        int bestCost = calculateTour(currentTour);
+        int bestCost = calculateTour(0, 0, currentTour);
         // std::cout<<"Best cost before ls: "<<bestCost;
         while (improvement) {
             improvement = false;
 
-            for (size_t i = 0; i < currentTour.size() - 1; ++i) {
-                for (size_t j = i + 1; j < currentTour.size(); ++j) {
+            for (size_t i = 0; i < currentTour.tour.size() - 1; ++i) {
+                for (size_t j = i + 1; j < currentTour.tour.size(); ++j) {
                     // std::cout<<"Checking ("<<i<<','<<j<<")\n";
-                    std::vector<int> newTour = currentTour;
-                    std::swap(newTour[i], newTour[j]);
-                    int newCost = calculateTour(newTour);
+                    Individual newTour{currentTour};
+                    std::swap(newTour.tour[i], newTour.tour[j]);
+                    int newCost = calculateTour(i, j, newTour);
                     // std::cout<<"Current new cost: "<<newCost<<std::endl;
 
                     if (newCost < bestCost) {
@@ -144,8 +144,8 @@ void TabuMemetic::initializePopulation() {
         }
         
         
-        individual.tour = currentTour;
-        individual.cost = calculateTour(individual.tour);
+        individual = currentTour;
+        // individual.cost = calculateTour(0, 0, individual);
 
         if(individual.cost < b_ini_c){
             b_ini_c = individual.cost;
@@ -241,33 +241,60 @@ void TabuMemetic::mutate(Individual& individual) {
     }
 }
 
-int TabuMemetic::calculateTour(const std::vector<int>& tour) {
-    int n = tour.size();
-    int totalCost = 0;
-    
-    // Traverse each triplet in the tour
-    for (int i = 0; i < n - 2; ++i) {
-        int a = tour[i];
-        int b = tour[i + 1];
-        int c = tour[i + 2];
+int TabuMemetic::calculateTour(const int& x, const int& y, const Individual& ind) {
+    int totalCost = ind.cost;
+
+    if(x || y){
+        totalCost += (graph->custo[ind.tour[y-2]][ind.tour[y-1]][ind.tour[x]]
+                     +graph->custo[ind.tour[y-1]][ind.tour[x]][ind.tour[y+1]]
+                     +graph->custo[ind.tour[x]][ind.tour[y+1]][ind.tour[y+2]]) +  //adicionando y-2 / y-1 / x / y+1 / y+2
+                    
+                     (graph->custo[ind.tour[x-2]][ind.tour[x-1]][ind.tour[y]]
+                     +graph->custo[ind.tour[x-1]][ind.tour[y]][ind.tour[x+1]]
+                     +graph->custo[ind.tour[y]][ind.tour[x+1]][ind.tour[x+2]]) -  //adicionando x-2 / x-1 / y / x+1 / x+2
+                    
+                     (graph->custo[ind.tour[x-2]][ind.tour[x-1]][ind.tour[x]]
+                     +graph->custo[ind.tour[x-1]][ind.tour[x]][ind.tour[x+1]]
+                     +graph->custo[ind.tour[x]][ind.tour[x+1]][ind.tour[x+2]]) - //removendo x-2 / x-1 / x / x+1 / x+2
+                    
+                     (graph->custo[ind.tour[y-2]][ind.tour[y-1]][ind.tour[y]]
+                     +graph->custo[ind.tour[y-1]][ind.tour[y]][ind.tour[y+1]]
+                     +graph->custo[ind.tour[y]][ind.tour[y+1]][ind.tour[y+2]]);  //removendo y-2 / y-1 / y / y+1 / y+2
+    } else {
+
+        auto n = ind.tour.size();
+        auto tour{ind.tour};
+        
+        // Traverse each triplet in the tour
+        for (int i = 0u; i < n - 2; ++i) {
+            int a = tour[i];
+            int b = tour[i + 1];
+            int c = tour[i + 2];
+            if(graph->custo[a][b][c] < INT_MAX) totalCost += graph->custo[a][b][c];
+            else return INT_MAX;
+        }
+        
+        // Handle the wrap-around cases for the end of the tour
+        int a = tour[n - 2];
+        int b = tour[n - 1];
+        int c = tour[0];
         if(graph->custo[a][b][c] < INT_MAX) totalCost += graph->custo[a][b][c];
         else return INT_MAX;
-    }
-    
-    // Handle the wrap-around cases for the end of the tour
-    int a = tour[n - 2];
-    int b = tour[n - 1];
-    int c = tour[0];
-    if(graph->custo[a][b][c] < INT_MAX) totalCost += graph->custo[a][b][c];
-    else return INT_MAX;
-    
-    // Add the cost for the last segment
-    a = tour[n - 1];
-    b = tour[0];
-    c = tour[1];
-    if(graph->custo[a][b][c] < INT_MAX) totalCost += graph->custo[a][b][c];
-    else return INT_MAX;
+        
+        // Add the cost for the last segment
+        a = tour[n - 1];
+        b = tour[0];
+        c = tour[1];
+        if(graph->custo[a][b][c] < INT_MAX) totalCost += graph->custo[a][b][c];
+        else return INT_MAX;
 
+    }
+
+
+
+
+
+    
     return totalCost;
 }
 
@@ -285,8 +312,8 @@ std::vector<int> TabuMemetic::run(Graph& graphInput) {
             Individual child2 = crossover(parents.second, parents.first);
             mutate(child1);
             mutate(child2);
-            child1.cost = calculateTour(child1.tour);
-            child2.cost = calculateTour(child2.tour);
+            child1.cost = calculateTour(0, 0, child1);
+            child2.cost = calculateTour(0, 0, child2);
 
             apply_tabu_search(child1);
             apply_tabu_search(child2);
@@ -295,7 +322,6 @@ std::vector<int> TabuMemetic::run(Graph& graphInput) {
             population.push_back(child2);
         }
     }
-    // std::cout<<"Seeking best!\n";
 
     // Return the best individual from the final population
     return std::min_element(population.begin(), population.end(),
@@ -316,7 +342,8 @@ void TabuMemetic::apply_tabu_search(Individual& ind) {
             for (size_t k = j + 1; k < ind.tour.size(); ++k) {
                 std::vector<int> new_tour = ind.tour;
                 std::swap(new_tour[j], new_tour[k]);
-                int new_cost = calculateTour(new_tour);
+                int new_cost = calculateTour(j, k, ind);
+            
 
                 if (new_cost < best_cost && tabu_list.find(new_tour) == tabu_list.end()) {
                     best_cost = new_cost;

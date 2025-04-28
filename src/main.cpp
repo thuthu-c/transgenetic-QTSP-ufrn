@@ -47,7 +47,8 @@ void runMemetic(int argc, char *argv[]){
         std::cout<<"Tour size: "<<bestTour.size()<<std::endl;
 
         // Calculate and print the cost of the best tour
-        int bestCost = taMeAlgorithm.calculateTour(bestTour);
+        TabuMemetic::Individual i{bestTour, 0};
+        int bestCost = taMeAlgorithm.calculateTour(0, 0, i);
         if(bestCost < INT_MAX)std::cout << "Best tour cost: " << bestCost << std::endl;
         else std::cout<<"There is no valid tour for this graph :("<<std::endl;
 

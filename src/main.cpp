@@ -6,6 +6,7 @@ using namespace std;
 #include "../include/algorithms/tabu_memetic.h"
 #include <climits>
 #include <string>
+#include <random>
 
 //stdout is not working due to irace, we can debug by printing to a file
 void debug(std::string st){

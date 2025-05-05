@@ -6,11 +6,16 @@
 #include <climits>
 #include <unordered_set>
 #include <string>
+#include <vector>
 
 using namespace std;
 
 TabuMemetic::TabuMemetic(int popSize, int maxGen, double mutRate, double crossRate)
-    : populationSize(popSize), maxGenerations(maxGen), mutationRate(mutRate) , crossoverRate(crossRate){}
+    : populationSize(popSize), maxGenerations(maxGen), mutationRate(mutRate) , crossoverRate(crossRate){
+        std::random_device rd;
+        std::mt19937 k(rd());
+        g = k;
+    }
 
 TabuMemetic::~TabuMemetic() {}
 
@@ -37,11 +42,11 @@ void TabuMemetic::initializePopulation() {
         }
 
         // Random number generator
-        std::random_device rd;
-        std::mt19937 gen(rd());
+        // std::random_device rd;
+        // std::mt19937 gen(rd());
 
         // Shuffle triples to introduce randomness
-        std::shuffle(triples.begin(), triples.end(), gen);
+        std::shuffle(triples.begin(), triples.end(), g);
 
         // Start with a random triple
         auto startTriple = triples.back();
@@ -69,7 +74,7 @@ void TabuMemetic::initializePopulation() {
             }
 
             // Shuffle the RCL to introduce randomness
-            std::shuffle(restrictedCandidateList.begin(), restrictedCandidateList.end(), gen);
+            std::shuffle(restrictedCandidateList.begin(), restrictedCandidateList.end(), g);
 
             // Select a random triple from the RCL
             if (!restrictedCandidateList.empty()) {
@@ -92,7 +97,7 @@ void TabuMemetic::initializePopulation() {
                 triples.erase(std::remove(triples.begin(), triples.end(), selectedTriple), triples.end());
             } else {
                 // If RCL is empty (no connected unvisited triples), restart with a new random triple
-                std::shuffle(triples.begin(), triples.end(), gen);
+                std::shuffle(triples.begin(), triples.end(), g);
                 auto newTriple = triples.back();
                 triples.pop_back();
                 if (!visited[std::get<0>(newTriple)]) {
@@ -163,8 +168,8 @@ void TabuMemetic::transgenesis(Individual& individual) {
 }
 
 std::pair<TabuMemetic::Individual, TabuMemetic::Individual> TabuMemetic::tournamentSelection(const std::vector<TabuMemetic::Individual>& population) {
-    std::random_device rd;
-    std::mt19937 g(rd());
+    // std::random_device rd;
+    // std::mt19937 g(rd());
     std::vector<Individual> tournament;
 
     // Ensure tournament size is positive and not larger than population size
@@ -189,8 +194,8 @@ std::pair<TabuMemetic::Individual, TabuMemetic::Individual> TabuMemetic::tournam
 }
 
 TabuMemetic::Individual TabuMemetic::crossover(const Individual& parent1, const Individual& parent2) {
-    std::random_device rd;
-    std::mt19937 g(rd());
+    // std::random_device rd;
+    // std::mt19937 g(rd());
     std::uniform_real_distribution<> disr(0.0, 1.0);
     
     int n = parent1.tour.size();
@@ -228,8 +233,8 @@ TabuMemetic::Individual TabuMemetic::crossover(const Individual& parent1, const 
 
 
 void TabuMemetic::mutate(Individual& individual) {
-    std::random_device rd;
-    std::mt19937 g(rd());
+    // std::random_device rd;
+    // std::mt19937 g(rd());
     std::uniform_real_distribution<> dis(0.0, 1.0);
     std::uniform_int_distribution<> idx_dis(0, individual.tour.size() - 1);
 
@@ -266,7 +271,7 @@ int TabuMemetic::calculateTour(const int& x, const int& y, const Individual& ind
         auto tour{ind.tour};
         
         // Traverse each triplet in the tour
-        for (int i = 0u; i < n - 2; ++i) {
+        for (long unsigned int i = 0; i < n - 2; ++i) {
             int a = tour[i];
             int b = tour[i + 1];
             int c = tour[i + 2];

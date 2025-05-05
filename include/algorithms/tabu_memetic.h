@@ -22,6 +22,7 @@ public:
     // Make calculateTour public for testing
     int calculateTour(const int& x, const int& y, const Individual& ind);
     Individual best_ini;
+    std::mt19937 g;
 
 private:
 

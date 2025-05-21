@@ -207,25 +207,25 @@ void run(TspSolver *solver, std::string graphFilename, std::ofstream &file)
 int Benchmark::evaluate()
 {
     std::vector<TspSolver *> algorithms;
-    BruteForce *bf = new BruteForce();
-    Tabu* tabu = new Tabu(this->tabuTime,this->tabuAspirationTime,this->tabuMaxIter);
-    NearestNeighborhood *nb = new NearestNeighborhood();
-    CheapestInsertion *ci = new CheapestInsertion();
-    BranchAndBound *bnb = new BranchAndBound();
-
-    GeneticImproved *gi = new GeneticImproved(
-        this->maxEvaluations,
-        this->populationSize,
-        this->crossoverRate,
-        this->mutationRate
-    );
-
-    Memetic *mm = new Memetic(
-        this->maxEvaluations,
-        this->populationSize,
-        this->crossoverRate,
-        this->mutationRate
-    );
+//     BruteForce *bf = new BruteForce();
+//     Tabu* tabu = new Tabu(this->tabuTime,this->tabuAspirationTime,this->tabuMaxIter);
+//     NearestNeighborhood *nb = new NearestNeighborhood();
+//     CheapestInsertion *ci = new CheapestInsertion();
+//     BranchAndBound *bnb = new BranchAndBound();
+// 
+//     GeneticImproved *gi = new GeneticImproved(
+//         this->maxEvaluations,
+//         this->populationSize,
+//         this->crossoverRate,
+//         this->mutationRate
+//     );
+// 
+//     Memetic *mm = new Memetic(
+//         this->maxEvaluations,
+//         this->populationSize,
+//         this->crossoverRate,
+//         this->mutationRate
+//     );
 
     // AnotherGenetic *agls = new AnotherGenetic(
     //     this->populationSize,
@@ -241,23 +241,23 @@ int Benchmark::evaluate()
 //         this->crossoverRate,
 //         false
 //     );
-    // TabuMemetic *tm = new TabuMemetic(
-    //     this->populationSize,
-    //     this->maxEvaluations,
-    //     this->mutationRate,
-    //     this->crossoverRate
-    // );
-    algorithms.push_back(ci);
-    algorithms.push_back(mm);
-    algorithms.push_back(gi);
-    algorithms.push_back(nb);
-    algorithms.push_back(ci);
-    algorithms.push_back(tabu);
-    algorithms.push_back(bnb);
-    algorithms.push_back(bf);
+    TabuMemetic *tm = new TabuMemetic(
+        this->populationSize,
+        this->maxEvaluations,
+        this->mutationRate,
+        this->crossoverRate
+    );
+    // algorithms.push_back(ci);
+    // algorithms.push_back(mm);
+    // algorithms.push_back(gi);
+    // algorithms.push_back(nb);
+    // algorithms.push_back(ci);
+    // algorithms.push_back(tabu);
+    // algorithms.push_back(bnb);
+    // algorithms.push_back(bf);
     // algorithms.push_back(ag);
     // algorithms.push_back(agls);
-    // algorithms.push_back(tm);
+    algorithms.push_back(tm);
 
     // std::vector<std::string> graphsPath = generateGraphs(5, 14);
 
@@ -268,15 +268,15 @@ int Benchmark::evaluate()
     outputFile.close();
 // 
 //     // run algorithms for every graph instances
-//     for (auto algorithm : algorithms)
-//     {
-//         for (std::string graphPath : graphsPath)
-//         {
-//             outputFile.open("result.csv", std::ios::app);
-//             run(algorithm, graphPath, outputFile);
-//             outputFile.close();
-//         }
-//     }
+    // for (auto algorithm : algorithms)
+    // {
+    //     for (std::string graphPath : graphsPath)
+    //     {
+    //         outputFile.open("result.csv", std::ios::app);
+    //         run(algorithm, graphPath, outputFile);
+    //         outputFile.close();
+    //     }
+    // }
 
     // running big graphs for big instances (ignoring brute force)
     std::vector<std::string> graphsPath = generateGraphs(50, 50);

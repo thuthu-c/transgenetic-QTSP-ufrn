@@ -10,8 +10,8 @@
 
 using namespace std;
 
-TabuMemetic::TabuMemetic(int popSize, int maxGen, double mutRate, double crossRate)
-    : populationSize(popSize), maxGenerations(maxGen), mutationRate(mutRate) , crossoverRate(crossRate){
+TabuMemetic::TabuMemetic(int popSize, int maxEval, double mutRate, double crossRate)
+    : populationSize(popSize), maxEvaluations(maxEval), mutationRate(mutRate) , crossoverRate(crossRate){
         std::random_device rd;
         std::mt19937 k(rd());
         g = k;
@@ -22,7 +22,9 @@ TabuMemetic::~TabuMemetic() {}
 void TabuMemetic::initializePopulation() {
     population.clear();
     b_ini_c = INT_MAX;
+    //cout<<"beginning pop of "<<populationSize<<"\n";
     for (int i = 0; i < populationSize; ++i) {
+        //cout<<i<<"th individual\n";
         Individual individual;
         int n = graph->getMaxM();
         std::vector<int> solution;
@@ -41,6 +43,8 @@ void TabuMemetic::initializePopulation() {
             }
         }
 
+        // //cout<<"got all triples\n";
+
         // Random number generator
         // std::random_device rd;
         // std::mt19937 gen(rd());
@@ -57,7 +61,7 @@ void TabuMemetic::initializePopulation() {
         visited[std::get<0>(startTriple)] = true;
         visited[std::get<1>(startTriple)] = true;
         visited[std::get<2>(startTriple)] = true;
-
+        // //cout<<"beginning solution construction\n";
         // Continue constructing the solution
         while (solution.size() < (unsigned long long int)n) {
             std::vector<std::tuple<int, int, int>> restrictedCandidateList;
@@ -114,6 +118,7 @@ void TabuMemetic::initializePopulation() {
                 }
             }
         }
+        // //cout<<"got em\n";
 
         // Make sure the solution is a valid circular tour
         if (solution.size() > (unsigned long long int)n) {
@@ -124,29 +129,31 @@ void TabuMemetic::initializePopulation() {
 
            
         bool improvement = true;
-        int bestCost = calculateTour(0, 0, currentTour);
-        // std::cout<<"Best cost before ls: "<<bestCost;
+        int bestCost = calculateTour(0ll, 0ll, currentTour);
+        // std:://cout<<"seeking improvement: "<<bestCost;
         while (improvement) {
             improvement = false;
+            long long int sz = currentTour.tour.size();
 
-            for (size_t i = 0; i < currentTour.tour.size() - 1; ++i) {
-                for (size_t j = i + 1; j < currentTour.tour.size(); ++j) {
-                    // std::cout<<"Checking ("<<i<<','<<j<<")\n";
+            for (auto i = 0ll; i < sz - 1; ++i) {
+                for (auto j = i + 1; j < sz; ++j) {
+                    // std:://cout<<"Checking ("<<i<<','<<j<<")\n";
                     Individual newTour{currentTour};
                     std::swap(newTour.tour[i], newTour.tour[j]);
                     int newCost = calculateTour(i, j, newTour);
-                    // std::cout<<"Current new cost: "<<newCost<<std::endl;
+                    // std:://cout<<"Current new cost: "<<newCost<<std::endl;
 
                     if (newCost < bestCost) {
-                        // std::cout<<"Improved!\n"<<bestCost<<" to "<<newCost<<std::endl;
+                        // std:://cout<<"Improved!\n"<<bestCost<<" to "<<newCost<<std::endl;
                         currentTour = newTour;
                         bestCost = newCost;
                         improvement = true;
                     }
                 }
             }
-        // std::cout<<"Best so far: "<<bestCost<<std::endl;
+        // std:://cout<<"Best so far: "<<bestCost<<std::endl;
         }
+        // //cout<<"improved\n";
         
         
         individual = currentTour;
@@ -157,10 +164,10 @@ void TabuMemetic::initializePopulation() {
             b_ini_p = individual.tour;
         }
         population.push_back(individual);
-        // std::cout<<"We have "<<population.size()<<" individuals of "<<populationSize<<"\n";
+        // std:://cout<<"We have "<<population.size()<<" individuals of "<<populationSize<<"\n";
     }
     ini_population = population;
-
+    //cout<<"Population all set!\n";
 }
 
 void TabuMemetic::transgenesis(Individual& individual) {
@@ -246,25 +253,47 @@ void TabuMemetic::mutate(Individual& individual) {
     }
 }
 
-int TabuMemetic::calculateTour(const int& x, const int& y, const Individual& ind) {
+int TabuMemetic::calculateTour(const long long int& x, const long long int& y, const Individual& ind) {
     int totalCost = ind.cost;
 
     if(x || y){
-        totalCost += (graph->custo[ind.tour[y-2]][ind.tour[y-1]][ind.tour[x]]
-                     +graph->custo[ind.tour[y-1]][ind.tour[x]][ind.tour[y+1]]
-                     +graph->custo[ind.tour[x]][ind.tour[y+1]][ind.tour[y+2]]) +  //adicionando y-2 / y-1 / x / y+1 / y+2
+         long long int sz = ind.tour.size();
+         long long int yl2{max(y-2, 0ll)}, yl1{max(y-1, 0ll)}, yp1{min(y+1, sz)}, yp2{min(y+2, sz)};
+         long long int xl2{max(x-2, 0ll)}, xl1{max(x-1, 0ll)}, xp1{min(x+1, sz)}, xp2{min(x+2, sz)};
+        // //cout<<"Swappin' "<<x<<"n"<<y<<endl;
+
+        totalCost += (yl2 ? (graph->custo[ind.tour[yl2]][ind.tour[yl1]][ind.tour[x]] - 
+                             graph->custo[ind.tour[yl2]][ind.tour[yl1]][ind.tour[y]]) : 0);
+
+        totalCost += (yl1 && (yp1<sz) ? (graph->custo[ind.tour[yl1]][ind.tour[x]][ind.tour[yp1]] - 
+                                         graph->custo[ind.tour[yl1]][ind.tour[y]][ind.tour[yp1]]) : 0);
+
+        totalCost += ((yp2<sz) ? (graph->custo[ind.tour[x]][ind.tour[yp1]][ind.tour[yp2]] - 
+                                  graph->custo[ind.tour[y]][ind.tour[yp1]][ind.tour[yp2]]) : 0);
+
+        totalCost += (xl2 ? (graph->custo[ind.tour[xl2]][ind.tour[xl1]][ind.tour[y]] - 
+                             graph->custo[ind.tour[xl2]][ind.tour[xl1]][ind.tour[x]]) : 0);
+
+        totalCost += (xl1 && (xp1<sz) ? (graph->custo[ind.tour[xl1]][ind.tour[y]][ind.tour[xp1]] - 
+                                        graph->custo[ind.tour[xl1]][ind.tour[x]][ind.tour[xp1]]) : 0);
+
+        totalCost += ((xp2<sz) ? (graph->custo[ind.tour[y]][ind.tour[xp1]][ind.tour[xp2]] - 
+                                    graph->custo[ind.tour[x]][ind.tour[xp1]][ind.tour[xp2]]) : 0);
+        // totalCost += (graph->custo[ind.tour[yl2]][ind.tour[yl1]][ind.tour[x]]
+                    //  +graph->custo[ind.tour[yl1]][ind.tour[x]][ind.tour[y+1]]
+                    //  +graph->custo[ind.tour[x]][ind.tour[y+1]][ind.tour[y+2]]) +  //adicionando yl2 / yl1 / x / y+1 / y+2
                     
-                     (graph->custo[ind.tour[x-2]][ind.tour[x-1]][ind.tour[y]]
-                     +graph->custo[ind.tour[x-1]][ind.tour[y]][ind.tour[x+1]]
-                     +graph->custo[ind.tour[y]][ind.tour[x+1]][ind.tour[x+2]]) -  //adicionando x-2 / x-1 / y / x+1 / x+2
+                    //  (graph->custo[ind.tour[x-2]][ind.tour[x-1]][ind.tour[y]]
+                    //  +graph->custo[ind.tour[x-1]][ind.tour[y]][ind.tour[x+1]]
+                    //  +graph->custo[ind.tour[y]][ind.tour[x+1]][ind.tour[x+2]]) -  //adicionando x-2 / x-1 / y / x+1 / x+2
                     
-                     (graph->custo[ind.tour[x-2]][ind.tour[x-1]][ind.tour[x]]
-                     +graph->custo[ind.tour[x-1]][ind.tour[x]][ind.tour[x+1]]
-                     +graph->custo[ind.tour[x]][ind.tour[x+1]][ind.tour[x+2]]) - //removendo x-2 / x-1 / x / x+1 / x+2
+                    //  (graph->custo[ind.tour[x-2]][ind.tour[x-1]][ind.tour[x]]
+                    //  +graph->custo[ind.tour[x-1]][ind.tour[x]][ind.tour[x+1]]
+                    //  +graph->custo[ind.tour[x]][ind.tour[x+1]][ind.tour[x+2]]) - //removendo x-2 / x-1 / x / x+1 / x+2
                     
-                     (graph->custo[ind.tour[y-2]][ind.tour[y-1]][ind.tour[y]]
-                     +graph->custo[ind.tour[y-1]][ind.tour[y]][ind.tour[y+1]]
-                     +graph->custo[ind.tour[y]][ind.tour[y+1]][ind.tour[y+2]]);  //removendo y-2 / y-1 / y / y+1 / y+2
+                    //  (graph->custo[ind.tour[yl2]][ind.tour[yl1]][ind.tour[y]]
+                    //  +graph->custo[ind.tour[yl1]][ind.tour[y]][ind.tour[y+1]]
+                    //  +graph->custo[ind.tour[y]][ind.tour[y+1]][ind.tour[y+2]]);  //removendo y-2 / yl1 / y / y+1 / y+2
     } else {
 
         auto n = ind.tour.size();
@@ -297,7 +326,9 @@ int TabuMemetic::calculateTour(const int& x, const int& y, const Individual& ind
 
 
 
+    ++currEvaluations;
 
+    // //cout<<currEvaluations<<endl;
 
     
     return totalCost;
@@ -305,11 +336,14 @@ int TabuMemetic::calculateTour(const int& x, const int& y, const Individual& ind
 
 std::vector<int> TabuMemetic::run(Graph& graphInput) {
     graph = &graphInput;
+    // //cout<<"initializing!\n";
     initializePopulation();
 
-    for (int generation = 0; generation < maxGenerations; ++generation) {
-        // std::cout<<"Gen "<<generation<<std::endl;
+    while (currEvaluations < maxEvaluations) {
+        // std:://cout<<"Gen "<<generation<<std::endl;
+        // //cout<<"Max sz: "<<populationSize<<endl;
         for (int i = 0; i < populationSize; ++i) {
+            //cout<<"Pop sz: "<<i<<endl;
             std::pair<Individual, Individual> parents = tournamentSelection(population);
             
 
@@ -317,8 +351,8 @@ std::vector<int> TabuMemetic::run(Graph& graphInput) {
             Individual child2 = crossover(parents.second, parents.first);
             mutate(child1);
             mutate(child2);
-            child1.cost = calculateTour(0, 0, child1);
-            child2.cost = calculateTour(0, 0, child2);
+            child1.cost = calculateTour(0ll, 0ll, child1);
+            child2.cost = calculateTour(0ll, 0ll, child2);
 
             apply_tabu_search(child1);
             apply_tabu_search(child2);
@@ -326,6 +360,7 @@ std::vector<int> TabuMemetic::run(Graph& graphInput) {
             population.push_back(child1);
             population.push_back(child2);
         }
+        //cout<<currEvaluations<<" de "<<maxEvaluations<<endl;
     }
 
     // Return the best individual from the final population
@@ -341,10 +376,11 @@ void TabuMemetic::apply_tabu_search(Individual& ind) {
     int best_cost = ind.cost;
     std::vector<int> best_tour = ind.tour;
     std::set<std::vector<int>> tabu_list;
+    long long int sz = ind.tour.size();
 
     for (int i = 0; i < 10/*tabu_tenure*/; ++i) {
-        for (size_t j = 0; j < ind.tour.size(); ++j) {
-            for (size_t k = j + 1; k < ind.tour.size(); ++k) {
+        for (auto j = 0ll; j < sz; ++j) {
+            for (auto k = j + 1; k < sz; ++k) {
                 std::vector<int> new_tour = ind.tour;
                 std::swap(new_tour[j], new_tour[k]);
                 int new_cost = calculateTour(j, k, ind);

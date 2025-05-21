@@ -10,7 +10,7 @@
 class TabuMemetic : public TspSolver
 {
 public:
-    TabuMemetic(int popSize, int maxGen, double mutRate, double crossRate);
+    TabuMemetic(int popSize, int maxEval, double mutRate, double crossRate);
     ~TabuMemetic();
 
     std::vector<int> run(Graph& graph) override;
@@ -20,14 +20,15 @@ public:
     };
 
     // Make calculateTour public for testing
-    int calculateTour(const int& x, const int& y, const Individual& ind);
+    int calculateTour(const long long int& x, const long long int& y, const Individual& ind);
     Individual best_ini;
     std::mt19937 g;
 
 private:
 
     int populationSize;
-    int maxGenerations;
+    int maxEvaluations;
+    int currEvaluations = 0;
     double mutationRate;
     double crossoverRate;
     std::vector<Individual> population;

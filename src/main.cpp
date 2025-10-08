@@ -159,8 +159,9 @@ int main(int argc, char *argv[])
     graph.addEdge(1, 0, 0, 50);
     graph.addEdge(2, 1, 1, 27);
     graph.addEdge(1, 0, 2, 12);
+    graph.addEdge(2, 1, 3, 27);
 
-    HGA hgaAlgo(10);
+    HGA hgaAlgo(1000);
     HGA::Individual individuo_teste;
     HGA::Individual individuo_teste_dois;
     hgaAlgo.setGraph(graph);

@@ -58,3 +58,7 @@ int Graph::getMaxM()
 {
     return this->maxm;
 }
+
+int Graph::getNumVertex(){ 
+    return this->maxm; 
+}

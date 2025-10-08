@@ -4,6 +4,7 @@
 using namespace std;
 
 #include "../include/algorithms/tabu_memetic.h"
+#include "../include/algorithms/hga.h"
 #include <climits>
 #include <string>
 #include <random>
@@ -18,7 +19,7 @@ void debug(std::string st){
 
 
 //lembra de mudar o parameterFile do irace_config.xml também
-bool isMemetic = true;//gambiarra por enquanto depois refatoramos melhor
+bool isMemetic = false;//gambiarra por enquanto depois refatoramos melhor
 
 void runMemetic(int argc, char *argv[]){
     if(argc == 1){
@@ -138,15 +139,55 @@ void runTabu(int argc, char *argv[]){
             tabuMaxIter
         );
 
-        benchmark.evaluate(instance, "tabu");
+        benchmark.evaluate();
         return ;
     }
 }
 
 int main(int argc, char *argv[])
 {
-    if(isMemetic) runMemetic(argc,argv);
-    else runTabu(argc,argv);
+    // if(isMemetic) runMemetic(argc,argv);
+    // else runTabu(argc,argv);
+    Graph graph(3); // Assuming 5 nodes for this example
+
+    // Add edges with costs (example edges)
+    graph.addEdge(0, 1, 2, 10);
+    graph.addEdge(1, 2, 0, 20);
+    graph.addEdge(2, 1, 0, 15);
+    graph.addEdge(2, 0, 1, 30);
+    graph.addEdge(0, 2, 1, 40);
+    graph.addEdge(1, 0, 0, 50);
+    graph.addEdge(2, 1, 1, 27);
+    graph.addEdge(1, 0, 2, 12);
+
+    HGA hgaAlgo(10);
+    HGA::Individual individuo_teste;
+    HGA::Individual individuo_teste_dois;
+    hgaAlgo.setGraph(graph);
+
+    int heuristic = hgaAlgo.chooseRemovalHeuristic();
+    std::cout<<"A heurística escolhida foi: " << heuristic << std::endl;
     
+    individuo_teste = hgaAlgo.createIndividuals();
+    individuo_teste_dois = hgaAlgo.createIndividuals();
+    std::vector<HGA::Individual> population;
+    hgaAlgo.initializePopulation(graph);
+
+    for(auto p : hgaAlgo.getPopulation()){
+        std::cout << "O custo do indivíduo é: " <<p.cost << std::endl;
+        std::cout << "O custo do indivíduo calculado é: " <<hgaAlgo.cost(p) << std::endl;
+        std::cout << "A diversidade é: " << hgaAlgo.fd(p) << std::endl; 
+        
+        for(auto v : p.tour){
+            std::cout << "vertice populacao" << v << std::endl; 
+        }
+        
+        std::cout << "acabou a tour da populacao " << std::endl; 
+    }
+
+    
+
+    // 
+
     return 0;
 }

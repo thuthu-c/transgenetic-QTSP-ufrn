@@ -1,0 +1,151 @@
+/**
+ * Implementation of HGA, a liter algorithm
+ * @author Thuanny Carvalho Rolim de Albuquerque
+ * @date September 14th, 2025
+ * @file hga.h
+ */ 
+
+#ifndef _HGA_H_
+#define _HGA_H_
+
+#include "../algorithms/tsp_solver.h" 
+#include "../data_structures/graph.h"
+#include <vector>
+#include <algorithm>
+#include <random>
+
+class HGA : public TspSolver
+{  
+
+    //fazer duas versões: uma com randomização dos vértices 
+
+    protected: 
+    int populationSize; 
+    Graph *graph;
+    
+    public:
+    std::mt19937 g;
+    // cada individuo da população inicial é representado por uma QTSP tour
+    struct Individual {
+        std::vector<int> tour;
+        int cost;
+        int costRank; 
+        double diversityContribution;
+        int diversityRank;
+    };
+
+    std::vector<Individual> population;
+    std::vector<Individual>& getPopulation();
+    void shuffle_vertex(std::vector<int> &vertex);
+    std::vector<int> getVertex();
+    void setGraph(Graph &graph); 
+
+    std::vector<int> run(Graph& graph) override;
+    HGA(int populationSize);
+    ~HGA();
+    
+    // inicialização população
+    
+     /*!
+     * This function implements the biased fitness, to evaluate the individuals of the original population.
+     * 
+     * @note There is no need for a comparison function to be passed as argument.
+     *
+     * @param first Pointer/iterator to the beginning of the range we wish to sort.
+     * @param last Pointer/iterator to the location just past the last valid value of the range we wish to sort.
+     * @tparam FwrdIt A forward iterator to the range we need to sort.
+     * @tparam Comparator A Comparator type function tha returns true if first argument is less than the second argument.
+     */
+    double biasedFitness (Individual individual); 
+
+
+     /*!
+     * Essa função implementa a classificação do indivíduo P_i na população P nos termos do seu valor objetivo
+     Calcular o valor objetivo de todos os individuos e retornar qual posição do individuo
+     criar um set de pair <numero_individuo, posicao_
+            solution.push_back(t);
+        }
+        individual.tour = solution;rank>, ordenado pela posicao rank 
+     * 
+     * @note cost(σPi).
+     *
+     * @param first Pointer/iterator to the beginning of the range we wish to sort.
+     * @param last Pointer/iterator to the location just past the last valid value of the range we wish to sort.
+     * @tparam FwrdIt A forward iterator to the range we need to sort.
+     * @tparam Comparator A Comparator type function tha returns true if first argument is less than the second argument.
+     */
+    int fc(Individual individual);
+
+    /*!
+     * Essa função implementa a classificação do indivíduo P_i na população P nos termos do seu valor de contribuição da diversidade
+     * 
+     * @note dc(σPi ).
+     *
+    a * @param first Pointer/iterator to the beginning of the range we wish to sort.
+     * @param last Pointer/iterator to the location just past the last valid value of the range we wish to sort.
+     * @tparam FwrdIt A forward iterator to the range we need to sort.
+     * @tparam Comparator A Comparator type function tha returns true if first argument is less than the second argument.
+     */
+    double fd(Individual individual);
+
+
+    // contribuição de diversidade
+    double dc (Individual pj); 
+    void individualDiversityRank ();
+
+    std::vector<std::pair<int,int>> generateAllNodesPairs(Individual individual);
+
+    long int numberOfSuccesivesPairsInATourPiWhichAreNotIncludedInPj(Individual Pi, Individual Pj);
+
+    long long int cost (const Individual& individual); 
+    void setIndividualCost ( Individual& individual);
+    void setIndividualDiversityContribution ( HGA::Individual& individual );
+
+    void setIndividualCostRank(Individual& individual); 
+
+    void individualCostRank(); 
+
+    std::vector<Individual*> generateCopyPopulation (); 
+
+    double normalizeBronkenPairsDistance(Individual Pi, Individual Pj);
+
+    
+
+    Individual createIndividuals(); 
+    
+    void createPopulation();
+
+    std::vector<std::pair<int, HGA::Individual*>> initializePopulation(Graph &graph);
+    std::vector<std::pair<int, Individual*>> evaluatePopulation(std::vector<HGA::Individual> &population, Graph &graph);
+
+    //fazer o operador de mutacao para diversidade e intensificacao
+    //These initial individuals are also diversified and intensified by the mutation operator and LS procedure, respectively.
+
+    // OPERADOR DE MUTACAO PARA DIVERSIDADE R&R (ruin and recreate)
+    void ruinAndRecreate(Individual indi);
+
+    void ruin (Individual indi){
+       int numero_de_nos_a_serem_removidos = generateNumberOfVertexToBeRemove(indi.tour);
+    }
+
+    int generateNumberOfVertexToBeRemove(std::vector<int> tour);
+
+    //Heristicas de remocao que serao escolhidas aleatoriamente
+    
+    //heuristica worst removal
+    std::vector<int> worstRemovalHeuristic(Individual indi);
+
+    // heuristica block removal
+    std::vector<int> blockRemovalHeuristic(Individual indi);
+    int chooseRemovalHeuristic();
+
+    //LS procedure para intensificacao
+
+    // seleção de pais
+    //crossover
+        // ruin-and-recreate mutation
+    //local serch
+    // administração da população
+    // retornar melhor solução 
+};
+#endif

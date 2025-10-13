@@ -34,6 +34,12 @@ class HGA : public TspSolver
         int diversityRank;
     };
 
+    enum HEURISTICS {
+    WORST,
+    BLOCK,
+    HEURISTICS_COUNT
+    };
+
     std::vector<Individual> population;
     std::vector<Individual>& getPopulation();
     void shuffle_vertex(std::vector<int> &vertex);
@@ -124,9 +130,7 @@ class HGA : public TspSolver
     // OPERADOR DE MUTACAO PARA DIVERSIDADE R&R (ruin and recreate)
     void ruinAndRecreate(Individual indi);
 
-    void ruin (Individual indi){
-       int numero_de_nos_a_serem_removidos = generateNumberOfVertexToBeRemove(indi.tour);
-    }
+    void ruin (Individual indi);
 
     int generateNumberOfVertexToBeRemove(std::vector<int> tour);
 
@@ -137,7 +141,7 @@ class HGA : public TspSolver
 
     // heuristica block removal
     std::vector<int> blockRemovalHeuristic(Individual indi);
-    int chooseRemovalHeuristic();
+    HEURISTICS chooseRemovalHeuristic();
 
     //LS procedure para intensificacao
 

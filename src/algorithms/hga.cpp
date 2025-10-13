@@ -14,11 +14,6 @@ std::vector<long int> costsTriples;
 
 typedef std::tuple<int, int, int> triple;
 
-enum HEURISTICS {
-    WORST,
-    BLOCK,
-    HEURISTICS_COUNT
-};
 
 
 
@@ -293,7 +288,7 @@ std::vector<std::pair<int, HGA::Individual*>> HGA::evaluatePopulation(std::vecto
 std::vector<std::pair<int, HGA::Individual*>> HGA::initializePopulation(Graph &graph){
     createPopulation();
     individualDiversityRank();
-    // individualCostRank();
+    individualCostRank();
 
     return evaluatePopulation(getPopulation(), graph);
 
@@ -321,7 +316,6 @@ std::vector<int> HGA::worstRemovalHeuristic(HGA::Individual indi){
     for(auto v : indi.tour){
         Individual aux;
         aux.tour = indi.tour;
-        aux.tour.erase(std::remove(aux.tour.begin(), aux.tour.end(), v), aux.tour.end());
         int custo_sem_v = cost(aux); 
         costs.emplace_back(std::make_pair(v, custo_tour - custo_sem_v));
     }
@@ -366,9 +360,27 @@ std::vector<int> HGA::blockRemovalHeuristic(Individual indi){
     return removed_nodes;
 }
 
-int HGA::chooseRemovalHeuristic(){
+HGA::HEURISTICS HGA::chooseRemovalHeuristic(){
     std::uniform_int_distribution<> distrib(0, HEURISTICS_COUNT -1); 
     HEURISTICS escolha = static_cast<HEURISTICS>(distrib(g));
 
     return escolha;
+}
+
+void HGA::ruin(Individual indi){
+    std::vector<int> vertexToBeRemoved;
+
+    if(chooseRemovalHeuristic() == HEURISTICS::BLOCK){
+        vertexToBeRemoved = blockRemovalHeuristic(indi);
+
+        for(auto v : vertexToBeRemoved){
+            indi.tour.erase(std::remove(indi.tour.begin(), indi.tour.end(), v), indi.tour.end());
+        }
+    } else{
+        vertexToBeRemoved = worstRemovalHeuristic(indi);
+
+        for(auto v : vertexToBeRemoved){
+            indi.tour.erase(std::remove(indi.tour.begin(), indi.tour.end(), v), indi.tour.end());
+        }
+    }
 }

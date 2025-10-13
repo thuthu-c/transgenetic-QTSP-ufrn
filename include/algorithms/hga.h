@@ -131,6 +131,7 @@ class HGA : public TspSolver
     void ruinAndRecreate(Individual indi);
 
     void ruin (Individual indi);
+    void recreate (Individual indi);
 
     int generateNumberOfVertexToBeRemove(std::vector<int> tour);
 

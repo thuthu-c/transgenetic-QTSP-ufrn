@@ -47,14 +47,6 @@ HGA::Individual HGA::createIndividuals(){
 
     std::vector<int> vertices = getVertex();
 
-    std::cout << "os vértices são: " << vertices.size() << std::endl;
-    
-    std::cout << "os vértices antes do shuffle são: "  << std::endl;
-    for(auto v : vertices) {
-        std::cout << v   << std::endl;
-    }
-
-    std::cout << "acabou os vértices antes do shuffle"  << std::endl;
 
     shuffle_vertex(vertices); 
 
@@ -109,22 +101,12 @@ long long int HGA::cost (const HGA::Individual& individual){
 
 
     for(auto i{0}; i < n-2; ++i){
-        std::cout<< "o custo do grafo é: " << graph->custo[individual.tour[i]][individual.tour[i+1]][individual.tour[i+2]] << std::endl;
         
         totalCost+= graph->custo[individual.tour[i]][individual.tour[i+1]][individual.tour[i+2]];
-        std::cout<< "vértices do custo: " << individual.tour[i] << " " << individual.tour[i+1] << " " << individual.tour[i+2] << std::endl;
-        std::cout<< "a variável totalcost é: " << totalCost << std::endl;
-        
     }
-    std::cout<< "vértices do custo  N-2: " << individual.tour[n-2] << " " << individual.tour[n-1] << " " << individual.tour[0] << std::endl;
-    std::cout<< "o custo do grafo n -2 é: " << graph->custo[individual.tour[n-2]][individual.tour[n-1]][individual.tour[0]] << std::endl;
+
     totalCost+= graph->custo[individual.tour[n-2]][individual.tour[n-1]][individual.tour[0]];
-    std::cout<< "a variável totalcost é: " << totalCost << std::endl;
-    std::cout<< "vértices do custo N-1: " << individual.tour[n-1] << " " <<individual.tour[0] << " " <<individual.tour[1] << std::endl;
-    std::cout<< "o custo do grafo n -1 é: " <<  graph->custo[individual.tour[n-1]][individual.tour[0]][individual.tour[1]]<< std::endl;
     totalCost+= graph->custo[individual.tour[n-1]][individual.tour[0]][individual.tour[1]];
-    std::cout<< "a variável totalcost é: " << totalCost << std::endl;
-    std::cout<< "o custo total do grafo é: " << totalCost << std::endl;
     return totalCost; 
 }
 
@@ -378,9 +360,26 @@ void HGA::ruin(Individual indi){
         }
     } else{
         vertexToBeRemoved = worstRemovalHeuristic(indi);
-
         for(auto v : vertexToBeRemoved){
             indi.tour.erase(std::remove(indi.tour.begin(), indi.tour.end(), v), indi.tour.end());
         }
     }
 }
+
+
+void HGA::recreate(Individual indi){
+
+    std::vector<int> vertex = indi.tour;
+    shuffle_vertex(vertex);
+    indi.tour.clear();
+
+    for(auto v : vertex) indi.tour.push_back(v);
+}
+
+
+void HGA::ruinAndRecreate(Individual indi) {
+    ruin(indi);
+
+    recreate(indi);
+}
+

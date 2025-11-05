@@ -10,6 +10,7 @@
 
 const long long int  uElite = 1000000; 
 std::vector<long int> costsTriples;
+const int gama = 20;
 
 
 typedef std::tuple<int, int, int> triple;
@@ -61,7 +62,8 @@ HGA::Individual HGA::createIndividuals(){
     individual.tour = solution;
 
     setIndividualCost(individual);
-    // setIndividualDiversityContribution(individual);
+
+    std::cout<<"custo do individuo: " << individual.cost << std::endl; 
 
     return individual;
 }
@@ -87,31 +89,36 @@ void HGA::createPopulation(){
     for(auto i{0}; i < populationSize; ++i){
         population.push_back(createIndividuals());
     }
+
+    for(auto p : population){
+        setIndividualDiversityContribution(p);
+         std::cout<<"diversidade do individuo: " << p.diversityContribution << std::endl; 
+    }
 }
 
 
 
-long long int HGA::cost (const HGA::Individual& individual){
+long long int HGA::cost (std::vector<int> tour){
 
     long long int totalCost{0}; 
 
     std::vector<int> custo;
     
-    int n = individual.tour.size(); 
+    int n = tour.size(); 
 
 
     for(auto i{0}; i < n-2; ++i){
         
-        totalCost+= graph->custo[individual.tour[i]][individual.tour[i+1]][individual.tour[i+2]];
+        totalCost+= graph->custo[tour[i]][tour[i+1]][tour[i+2]];
     }
 
-    totalCost+= graph->custo[individual.tour[n-2]][individual.tour[n-1]][individual.tour[0]];
-    totalCost+= graph->custo[individual.tour[n-1]][individual.tour[0]][individual.tour[1]];
+    totalCost+= graph->custo[tour[n-2]][tour[n-1]][tour[0]];
+    totalCost+= graph->custo[tour[n-1]][tour[0]][tour[1]];
     return totalCost; 
 }
 
 void HGA::setIndividualCost ( HGA::Individual& individual ){
-    individual.cost = cost(individual);
+    individual.cost = cost(individual.tour);
     std::cout<< "o custo do set é: " << individual.cost << std::endl;
 } 
 
@@ -122,7 +129,7 @@ void HGA::setIndividualDiversityContribution ( HGA::Individual& individual ){
 
 
 void HGA::setIndividualCostRank ( HGA::Individual& individual ){
-    individual.costRank = cost(individual);
+    individual.costRank = cost(individual.tour);
 }
 
 
@@ -202,6 +209,7 @@ double HGA::fd(HGA::Individual individual) {
     return individual.diversityRank;
 }
 
+//acesso a tour e lido com os vértices de cada tour
 std::vector<std::pair<int,int>> HGA::generateAllNodesPairs(HGA::Individual individual){
     std::vector<std::pair<int,int>> pairs;
 
@@ -290,7 +298,7 @@ int HGA::generateNumberOfVertexToBeRemove(std::vector<int> tour){
 
 
 std::vector<int> HGA::worstRemovalHeuristic(HGA::Individual indi){
-    auto custo_tour = cost(indi);
+    auto custo_tour = cost(indi.tour);
     std::vector<std::pair<int,int>> costs;
     int numero_de_vertices_para_remover = generateNumberOfVertexToBeRemove(indi.tour);
     std::vector<int> removed_nodes;
@@ -298,7 +306,7 @@ std::vector<int> HGA::worstRemovalHeuristic(HGA::Individual indi){
     for(auto v : indi.tour){
         Individual aux;
         aux.tour = indi.tour;
-        int custo_sem_v = cost(aux); 
+        int custo_sem_v = cost(aux.tour); 
         costs.emplace_back(std::make_pair(v, custo_tour - custo_sem_v));
     }
 
@@ -382,4 +390,208 @@ void HGA::ruinAndRecreate(Individual indi) {
 
     recreate(indi);
 }
+
+
+void HGA::lsProcedure(){
+
+}
+
+std::vector<int> HGA::LocalSearch (Individual indi){
+    // linha 1 
+    std::vector<int> solution = indi.tour;
+
+    std::vector<int> V = solution;
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    // linha 2
+    double p4Opt = 0.1;
+    std::uniform_real_distribution<> dis(0.0, 1.0);
+    bool use4Opt = (dis(gen) < p4Opt);
+
+    bool imp = true; 
+
+    int pos{0};
+
+    while(imp){
+        imp = false; 
+        std::vector<int> solu_aux = solution; 
+        for(auto u: V){
+            std::vector<int> Li = L(pos,u, V);
+            for(auto v: Li){
+                for(auto i{1}; i <= 7; ++i){
+                    if(i == 1){
+                        solu_aux.insert(solu_aux.begin()+pos+1, v);
+                    }
+                    if(i == 2){
+                        int arc[] ={v,Li[pos]};
+                        std::vector<int> arcs(arc, arc+ sizeof(arc) / sizeof(int));
+                        solu_aux.insert(solu_aux.begin()+pos+1, arcs.begin(), arcs.end());
+                    }
+                    if(i == 3){
+                        std::swap(solu_aux[pos+1], v); 
+                    }
+                    if(i == 4){
+                        std::swap(solu_aux[pos+1], v);
+                        solu_aux.insert(solu_aux.begin()+pos+2,Li[pos+1]);
+                        Li.erase (Li.begin()+pos+1);
+                    }
+                    if(i == 5){
+                        std::swap(solu_aux[pos+1], v);
+                        Li.insert(Li.begin()+pos+1,solu_aux[pos+2]);
+                        solu_aux.erase (solu_aux.begin()+pos+2);
+                    }
+                    if(i == 6){
+                        std::swap(solu_aux[pos+1], v);
+                        std::swap(solu_aux[pos+2], Li[pos+1]);
+                    }
+                    if(i ==7){
+                        std::vector<int> sequence;
+
+                        for(auto s{pos+1}; s <= solu_aux.size(); ++s){
+                            if(solu_aux[s] == v){
+                                sequence.push_back(solu_aux[s]);
+                                solu_aux.erase(solu_aux.begin()+pos+1,solu_aux.begin()+s);
+                                break;
+                            }
+                            sequence.push_back(solu_aux[s]);
+                        }
+                        std::reverse(sequence.begin(),sequence.end());
+                        solu_aux.insert(solu_aux.begin()+pos, sequence.begin(), sequence.end());
+                    }
+
+                    if(cost(solu_aux) < cost(solution)){
+                        solution = solu_aux;
+                        imp = true;
+                        break;
+                    }
+                }
+            }
+            
+            ++pos;
+        }
+
+        if(use4Opt && !imp){
+            solu_aux = best4opt(solution);
+            if(cost(solu_aux) < cost(solution)){
+                solution = solu_aux;
+                imp = true;
+            }
+        }
+
+    }
+
+    
+    return solution;
+}
+
+std::vector<int> HGA::L (int pos_u, int u, std::vector<int> V){
+    int n = V.size();
+    std::vector<std::pair<int, int>> neighbors;
+
+    for(auto v : V){
+        if(v != u){
+            neighbors.push_back(std::make_pair(v, pi(pos_u, u, v, V))); 
+        }
+    }
+
+    std::sort(neighbors.begin(), neighbors.end(),
+    [] (const std::pair<int, int> &a, const std::pair<int, int> &b)
+    {
+        return a.second < b.second;
+    });
+
+    
+    std::vector<int> result;
+ 
+    size_t limit = std::min((size_t)gama, neighbors.size()); 
+
+    for (size_t i = 0; i < limit; ++i) {
+        result.push_back(neighbors[i].first);
+    }
+    
+    return result;
+
+}
+
+
+//retornar o vértice predecessor de u
+int HGA::pred ( int pos_u,std::vector<int> tour){
+    if( pos_u == 0){
+        return tour[tour.size()-1];
+    }else{
+
+        return tour[pos_u-1];
+    }
+
+
+}
+
+long long int HGA::pi(int pos_u,int u, int v, std::vector<int> tour ){
+    return graph->custo[pred(pos_u, tour)][u][v];
+}
+
+
+//guardar o melhor a tour com o melhor movimento 4opt baseado no menor delta delta
+std::vector<int> HGA::best4opt(std::vector<int> solution){
+    double BEST = std::numeric_limits<double>::infinity(); 
+    int n = solution.size();
+    // if(Cond(i1, i2, j1, j2)){
+    //     BEST = std::min(BEST, static_cast<double>(delta(i1, i2, j1, j2)));
+    // }
+
+    std::vector<std::vector<double>> F(n + 1, std::vector<double>(n + 1));
+    std::vector<std::vector<double>> DeltaStar(n + 1, std::vector<double>(n + 1));
+
+    for(int j1= 5; j1 <= n-3; ++j1){
+        F[7][j1] = D2O(1, j1);
+
+        for(int i2 = 4; i2 <= j1 -2; ++i2){
+            F[i2][j1] =  std::min(F[i2 - 1][j1], static_cast<double>(D2O(i2 - 2, j1)));
+        }
+    }
+
+    for(int i2 = 3; i2 <= n -5; ++i2){
+        DeltaStar[i2][i2 + 4] = F[i2][i2 + 2]; 
+
+        for(int j2 = i2 + 5; j2 <= n-1; ++j2){
+            DeltaStar[i2][j2] = std::min(DeltaStar[i2][j2 - 1], F[i2][j2 - 2]);
+
+            double Delta_Best_current = D2O(i2, j2) + DeltaStar[i2][j2];
+
+            BEST = std::min(BEST, Delta_Best_current);
+        }
+        
+    }
+
+    // No 4-opt move implemented yet; return the (possibly unchanged) solution
+    return solution;
+}
+
+long long int HGA::D2O (int i, int j){
+    return graph->custo[i-1][i][j+1] + graph->custo[i][j+1][j+2]
+         + graph->custo[j][i+1][i+2] + graph->custo[j-1][j][i+1]
+         - graph->custo[i-1][i][i+1] - graph->custo[i][i+1][i+2]
+         - graph->custo[j-1][j][j+1] - graph->custo[j][j+1][j+2];
+}
+
+long long int HGA::delta(int i1, int i2, int j1, int j2){
+    return D2O(i1, j1) + D2O(i2, j2);
+}
+
+bool HGA::Cond(int i1, int i2, int j1, int j2){
+    return ((i1 + 1 == i2) ?  ((i2 + 1 == j1 ) ? true : ((j1 + 1 == j2 ) ? true : false)): false);
+}
+
+std::vector<int> HGA::FourOptNeighborhood(std::vector<int> tour){
+
+}
+
+
+
+
+
+
+
 

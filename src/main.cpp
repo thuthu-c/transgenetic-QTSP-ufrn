@@ -291,7 +291,7 @@ graph.addEdge(4, 4, 4, 0);
 
     for(auto p : hgaAlgo.getPopulation()){
         std::cout << "O custo do indivíduo é: " <<p.cost << std::endl;
-        std::cout << "O custo do indivíduo calculado é: " <<hgaAlgo.cost(p) << std::endl;
+        std::cout << "O custo do indivíduo calculado é: " <<hgaAlgo.cost(p.tour) << std::endl;
         std::cout << "A diversidade é: " << hgaAlgo.fd(p) << std::endl; 
         
         for(auto v : p.tour){

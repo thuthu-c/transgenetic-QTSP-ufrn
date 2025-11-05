@@ -103,7 +103,7 @@ class HGA : public TspSolver
 
     long int numberOfSuccesivesPairsInATourPiWhichAreNotIncludedInPj(Individual Pi, Individual Pj);
 
-    long long int cost (const Individual& individual); 
+    long long int cost (std::vector<int> tour); 
     void setIndividualCost ( Individual& individual);
     void setIndividualDiversityContribution ( HGA::Individual& individual );
 
@@ -144,6 +144,25 @@ class HGA : public TspSolver
     std::vector<int> blockRemovalHeuristic(Individual indi);
     HEURISTICS chooseRemovalHeuristic();
 
+    void lsProcedure(); 
+
+    std::vector<int> LocalSearch (Individual indi);
+
+    std::vector<int> L (int pos_u, int u, std::vector<int> V);
+    int pred ( int pos_u,std::vector<int> tour);
+
+    long long int pi(int pos_u,int u, int v, std::vector<int> tour);
+
+    std::vector<int> best4opt(std::vector<int> solution);
+
+    long long int D2O (int i, int j);
+    long long int delta(int i1, int i2, int j1, int j2);
+
+    bool Cond(int i1, int i2, int j1, int j2); 
+
+    std::vector<int> FourOptNeighborhood(std::vector<int> tour);
+
+    
     //LS procedure para intensificacao
 
     // seleção de pais

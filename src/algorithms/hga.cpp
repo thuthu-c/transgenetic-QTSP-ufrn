@@ -1,4 +1,5 @@
 #include "../../include/algorithms/hga.h"
+#include "../../include/algorithms/cheapest_insertion.h"
 #include <numeric>
 #include <iostream>
 #include <random>
@@ -26,7 +27,9 @@ void HGA::setGraph(Graph &graph){
     this->graph = &graph;
 }
 
-std::vector<int> HGA::run(Graph& graph){}
+std::vector<int> HGA::run(Graph& graph){
+    
+}
 
 HGA::~HGA() {}
 // criar um individuo da população
@@ -61,6 +64,29 @@ HGA::Individual HGA::createIndividuals(){
 
     individual.tour = solution;
 
+    std::cout << "Solução antes da diversificação" << " " << std::endl;
+
+    for(auto s : solution){
+        std::cout << s << " " << std::endl;
+    }
+    // diversificar
+
+    std::cout << "Vou arruinar e recriar" << " " << std::endl;
+    ruinAndRecreate(individual);
+
+    auto solution2 = individual.tour;
+    
+    std::cout << "Solução depois da diversificação" << " " << std::endl;
+    for(auto s : solution2){
+        std::cout << s << " " << std::endl;
+    }
+
+    individual.tour = lsProcedure(solution2);
+
+     std::cout << "Solução depois da intensificação" << " " << std::endl;
+    for(auto s : individual.tour){
+        std::cout << s << " " << std::endl;
+    }
     setIndividualCost(individual);
 
     std::cout<<"custo do individuo: " << individual.cost << std::endl; 
@@ -287,21 +313,32 @@ std::vector<std::pair<int, HGA::Individual*>> HGA::initializePopulation(Graph &g
 
 int HGA::generateNumberOfVertexToBeRemove(std::vector<int> tour){
     int numero_de_nos = tour.size();
-    int p_min = 5;
+    std::cout << "qual o número de nós? "<< numero_de_nos  << " " << std::endl;
+    int p_min = 1;
     int p_max = std::min(40, numero_de_nos/3);
 
     static std::mt19937 gen(std::random_device{}());
     std::uniform_int_distribution<> distrib(p_min, p_max);
 
-    return distrib(gen);
+    int retorno = distrib(gen);
+    
+    std::cout << "o retorno é? "<< retorno  << " " << std::endl;
+
+    return retorno;
 }
 
 
 std::vector<int> HGA::worstRemovalHeuristic(HGA::Individual indi){
+    std::cout << "entramos na heurística de remoção do pior!" << " " << std::endl;
     auto custo_tour = cost(indi.tour);
+    std::cout << "calculei o custo? " << custo_tour << " " << std::endl;
     std::vector<std::pair<int,int>> costs;
+    std::cout << "bora gerar o número de vértices para remover?? "  << " " << std::endl;
     int numero_de_vertices_para_remover = generateNumberOfVertexToBeRemove(indi.tour);
+    std::cout << "o número de vértices para remover " << numero_de_vertices_para_remover << " " << std::endl;
     std::vector<int> removed_nodes;
+
+    std::cout << "Até aqui tudo bem!" << " " << std::endl;
 
     for(auto v : indi.tour){
         Individual aux;
@@ -309,6 +346,8 @@ std::vector<int> HGA::worstRemovalHeuristic(HGA::Individual indi){
         int custo_sem_v = cost(aux.tour); 
         costs.emplace_back(std::make_pair(v, custo_tour - custo_sem_v));
     }
+
+    std::cout << " aqui tudo bem também!" << " " << std::endl;
 
     std::vector<int> weights;
     for (const auto& pair : costs) {
@@ -328,6 +367,8 @@ std::vector<int> HGA::worstRemovalHeuristic(HGA::Individual indi){
         }
 
         removed_nodes.push_back(costs[selected_tour_index].first);
+        std::cout << " aqui???" << " " << std::endl;
+
         already_removed[selected_tour_index] = true;
 
         weights[selected_tour_index] = 0.0;
@@ -357,48 +398,128 @@ HGA::HEURISTICS HGA::chooseRemovalHeuristic(){
     return escolha;
 }
 
-void HGA::ruin(Individual indi){
+std::vector<int> HGA::ruin(Individual &indi){
     std::vector<int> vertexToBeRemoved;
 
+     
     if(chooseRemovalHeuristic() == HEURISTICS::BLOCK){
+        std::cout << "O problema sou eu???" << " " << std::endl;
         vertexToBeRemoved = blockRemovalHeuristic(indi);
+        std::cout << "A heurística rodou legal!!!" << " " << std::endl;
 
         for(auto v : vertexToBeRemoved){
+            std::cout << "o vértice que eu vou remover é o "<< v << " " << std::endl;
             indi.tour.erase(std::remove(indi.tour.begin(), indi.tour.end(), v), indi.tour.end());
         }
     } else{
+
+        std::cout << "Não, o problema sou eu" << " " << std::endl;
         vertexToBeRemoved = worstRemovalHeuristic(indi);
+        std::cout << "A heurística rodou legal!!!" << " " << std::endl;
         for(auto v : vertexToBeRemoved){
+            std::cout << "o vértice que eu vou remover é o "<< v << " " << std::endl;
             indi.tour.erase(std::remove(indi.tour.begin(), indi.tour.end(), v), indi.tour.end());
         }
+
+        std::cout << "tour com os vertices removidos" << std::endl;
+
+        for(auto t : indi.tour){
+            std::cout << t << " " << std::endl;
+        }
+
+        std::cout << "finalizamos o passei" << std::endl;
     }
+
+    return vertexToBeRemoved;
 }
 
+long long int HGA::calculateInsertionCost(const std::vector<int>& tour, int pos, int vertex) {
+    int n = tour.size();
+    
+    // Identificar os vizinhos envolvidos
+    // Sequência atual: ... -> h -> i -> j -> k -> ...
+    // Inserção entre i (pos) e j (pos+1)
+    // Nova sequência: ... -> h -> i -> v -> j -> k -> ...
+    
+    int i_idx = pos;
+    int j_idx = (pos + 1) % n;
+    
+    // Precisamos de h (predecessor de i) e k (sucessor de j)
+    int h_idx = (i_idx - 1 + n) % n;
+    int k_idx = (j_idx + 1) % n;
 
-void HGA::recreate(Individual indi){
+    int h = tour[h_idx];
+    int i = tour[i_idx];
+    int j = tour[j_idx];
+    int k = tour[k_idx];
+
+    // Custo removido (as triplas que deixam de existir)
+    // Triplas: (h, i, j) e (i, j, k)
+    long long int removedCost = graph->custo[h][i][j] + 
+                                graph->custo[i][j][k];
+
+    // Custo adicionado (as novas triplas formadas pelo vértice v)
+    // Triplas: (h, i, v), (i, v, j), (v, j, k)
+    long long int addedCost = graph->custo[h][i][vertex] + 
+                              graph->custo[i][vertex][j] + 
+                              graph->custo[vertex][j][k];
+
+    return addedCost - removedCost;
+}
+
+void HGA::recreate(Individual &indi, std::vector<int> vertexToBeInserted){
+    std::cout<< "Qual é a tour que eu to recebendo??" <<std::endl;
+    for(auto s : indi.tour){
+        std::cout<< s << std::endl;
+    }
 
     std::vector<int> vertex = indi.tour;
-    shuffle_vertex(vertex);
-    indi.tour.clear();
+    shuffle_vertex(vertexToBeInserted);
+    // indi.tour.clear();
+    
 
-    for(auto v : vertex) indi.tour.push_back(v);
+    for (int vertex : vertexToBeInserted) {
+        long long int bestDelta = LLONG_MAX;
+        int bestPos = -1;
+        
+        // Testa todas as posições possíveis na tour atual
+        for (int i = 0; i < indi.tour.size(); ++i) {
+            long long int currentDelta = calculateInsertionCost(indi.tour, i, vertex);
+            
+            if (currentDelta < bestDelta) {
+                bestDelta = currentDelta;
+                bestPos = i;
+            }
+        }
+        
+        // Insere na melhor posição encontrada
+        // bestPos indica inserir DEPOIS do elemento bestPos (ou seja, na posição bestPos + 1)
+        // Nota: vector::insert insere ANTES do iterador, então usamos begin + bestPos + 1
+        indi.tour.insert(indi.tour.begin() + bestPos + 1, vertex);
+    }
+
+    std::cout<<"A solução depois que eu recriei" << std::endl;
+
+    for(auto t : indi.tour) std::cout<< t << std::endl;
 }
 
 
-void HGA::ruinAndRecreate(Individual indi) {
-    ruin(indi);
+void HGA::ruinAndRecreate(Individual& indi) {
+    std::cout << "ARRUINANDO" << " " << std::endl;
+    std::vector<int> vertex = ruin(indi);
 
-    recreate(indi);
+     std::cout << "RECREANDO" << " " << std::endl;
+    recreate(indi, vertex);
 }
 
 
-void HGA::lsProcedure(){
-
+std::vector<int> HGA::lsProcedure(std::vector<int> current_solution){
+    return LocalSearch(current_solution);
 }
 
-std::vector<int> HGA::LocalSearch (Individual indi){
+std::vector<int> HGA::LocalSearch (std::vector<int> current_solution){
     // linha 1 
-    std::vector<int> solution = indi.tour;
+    std::vector<int> solution =  current_solution;
 
     std::vector<int> V = solution;
 
@@ -412,53 +533,141 @@ std::vector<int> HGA::LocalSearch (Individual indi){
 
     bool imp = true; 
 
-    int pos{0};
-
+    
+    std::cout<< "Os vértices V é: " << std::endl;
+                        for(auto s : V){
+                            std::cout<< s << std::endl;
+                        }
+    std::cout << "vou entrar no while, me aguarde" << std::endl;
     while(imp){
         imp = false; 
         std::vector<int> solu_aux = solution; 
+        int pos{0};
         for(auto u: V){
             std::vector<int> Li = L(pos,u, V);
+            std::cout<< "A Lista Li é: " << std::endl;
+                        for(auto s : Li){
+                            std::cout<< s << std::endl;
+                        }
+            
             for(auto v: Li){
                 for(auto i{1}; i <= 7; ++i){
+                    std::cout<< "valor de i é: " << i << std::endl;
                     if(i == 1){
-                        solu_aux.insert(solu_aux.begin()+pos+1, v);
+                        std:: cout<< "v é: " << v << std::endl;
+                        std:: cout<< "u é: " << u << std::endl;
+                        auto it_p = std::find(solu_aux.begin(), solu_aux.end(), v);
+                        solu_aux.erase(it_p);
+                        auto it_pos = std::find(solu_aux.begin(), solu_aux.end(), u);
+                        solu_aux.insert(it_pos+1, v);
+                        std::cout<< "A solução é: " << std::endl;
+                        for(auto s : solu_aux){
+                            std::cout<< s << std::endl;
+                        }
                     }
                     if(i == 2){
-                        int arc[] ={v,Li[pos]};
-                        std::vector<int> arcs(arc, arc+ sizeof(arc) / sizeof(int));
-                        solu_aux.insert(solu_aux.begin()+pos+1, arcs.begin(), arcs.end());
+                        std:: cout<< "v é: " << v << std::endl;
+                        std:: cout<< "u é: " << u << std::endl;
+                        auto it_v = std::find(solu_aux.begin(), solu_aux.end(), v);
+                        auto it_pos = std::find(solu_aux.begin(), solu_aux.end(), u);
+                        if(it_v == it_pos+1){
+                            continue;
+                        }else{
+                            std::vector<int> arc(it_v, it_v+1);
+                            solu_aux.erase(it_v, it_v+1);
+                            solu_aux.insert(solu_aux.begin() + pos + 1, arc.begin(), arc.end());
+                        }
+                        std::cout<< "A solução é: " << std::endl;
+                        for(auto s : solu_aux){
+                            std::cout<< s << std::endl;
+                        }
                     }
                     if(i == 3){
-                        std::swap(solu_aux[pos+1], v); 
+                         auto it_v = std::find(solu_aux.begin(), solu_aux.end(), v);
+                        auto it_pos = std::find(solu_aux.begin(), solu_aux.end(), u);
+                        if(it_v == it_pos+1){
+                            continue;
+                        }else{
+                            std::swap(solu_aux[pos+1], v); 
+                        }
+                        
+                         std::cout<< "A solução é: " << std::endl;
+                        for(auto s : solu_aux){
+                            std::cout<< s << std::endl;
+                        }
                     }
                     if(i == 4){
-                        std::swap(solu_aux[pos+1], v);
-                        solu_aux.insert(solu_aux.begin()+pos+2,Li[pos+1]);
-                        Li.erase (Li.begin()+pos+1);
+                        auto it_v = std::find(solu_aux.begin(), solu_aux.end(), v);
+                        auto it_pos = std::find(solu_aux.begin(), solu_aux.end(), u);
+                        if(it_v == it_pos+1){
+                            continue;
+                        } else{
+                            std::swap(solu_aux[pos+1], v);
+                            solu_aux.insert(solu_aux.begin()+pos+2,Li[pos+1]);
+                            Li.erase (Li.begin()+pos+1);
+                        }
+                        
+                         std::cout<< "A solução é: " << std::endl;
+                        for(auto s : solu_aux){
+                            std::cout<< s << std::endl;
+                        }
                     }
                     if(i == 5){
-                        std::swap(solu_aux[pos+1], v);
-                        Li.insert(Li.begin()+pos+1,solu_aux[pos+2]);
-                        solu_aux.erase (solu_aux.begin()+pos+2);
+                        auto it_v = std::find(solu_aux.begin(), solu_aux.end(), v);
+                        auto it_pos = std::find(solu_aux.begin(), solu_aux.end(), u);
+                        if(it_pos+1 == it_v || it_pos+2 == it_v){
+                            continue;
+                        }else{
+                            std::swap(solu_aux[pos+1], v);
+                            solu_aux.erase (solu_aux.begin()+pos+2);
+                        }
+                        
+                         std::cout<< "A solução é: " << std::endl;
+                        for(auto s : solu_aux){
+                            std::cout<< s << std::endl;
+                        }
                     }
                     if(i == 6){
-                        std::swap(solu_aux[pos+1], v);
-                        std::swap(solu_aux[pos+2], Li[pos+1]);
+                        auto it_v = std::find(solu_aux.begin(), solu_aux.end(), v);
+                        auto it_pos = std::find(solu_aux.begin(), solu_aux.end(), u);
+                        if(it_v == it_pos+1){
+                            continue;
+                        }else{
+                            std::swap(solu_aux[pos+1], v);
+                            std::swap(solu_aux[pos+2], Li[pos+1]);
+                        }
+                        
+                        std::cout<< "A solução é: " << std::endl;
+                        for(auto s : solu_aux){
+                            std::cout<< s << std::endl;
+                        }
                     }
                     if(i ==7){
-                        std::vector<int> sequence;
+                        auto it_v = std::find(solu_aux.begin(), solu_aux.end(), v);
+                        auto it_pos = std::find(solu_aux.begin(), solu_aux.end(), u);
+                        if(it_v == it_pos+1){
+                            continue;
+                        }else{
+                            std::vector<int> sequence;
 
-                        for(auto s{pos+1}; s <= solu_aux.size(); ++s){
-                            if(solu_aux[s] == v){
+                            for(auto s{pos+1}; s <= solu_aux.size(); ++s){
+                                if(solu_aux[s] == v){
+                                    sequence.push_back(solu_aux[s]);
+                                    solu_aux.erase(solu_aux.begin()+pos+1,solu_aux.begin()+s);
+                                    break;
+                                }
                                 sequence.push_back(solu_aux[s]);
-                                solu_aux.erase(solu_aux.begin()+pos+1,solu_aux.begin()+s);
-                                break;
                             }
-                            sequence.push_back(solu_aux[s]);
+                            std::reverse(sequence.begin(),sequence.end());
+                            solu_aux.insert(solu_aux.begin()+pos, sequence.begin(), sequence.end());
                         }
-                        std::reverse(sequence.begin(),sequence.end());
-                        solu_aux.insert(solu_aux.begin()+pos, sequence.begin(), sequence.end());
+
+                        
+
+                         std::cout<< "A solução é: " << std::endl;
+                        for(auto s : solu_aux){
+                            std::cout<< s << std::endl;
+                        }
                     }
 
                     if(cost(solu_aux) < cost(solution)){
@@ -466,11 +675,23 @@ std::vector<int> HGA::LocalSearch (Individual indi){
                         imp = true;
                         break;
                     }
+
+                     std::cout << "passei por tudo bonitinho" << std::endl;
+
+
                 }
             }
             
             ++pos;
+
+            std::cout << "a posição é: " << pos<< std::endl;
+            std::cout<< "A solução depois da posição é: " << std::endl;
+                        for(auto s : solu_aux){
+                            std::cout<< s << std::endl;
+                        }
         }
+
+        std::cout << "acabou a putaria!!! " << pos<< std::endl;
 
         if(use4Opt && !imp){
             solu_aux = best4opt(solution);
@@ -482,7 +703,10 @@ std::vector<int> HGA::LocalSearch (Individual indi){
 
     }
 
-    
+    std::cout<< "A solução retornada é: " << std::endl;
+                        for(auto s : solution){
+                            std::cout<< s << std::endl;
+                        }
     return solution;
 }
 

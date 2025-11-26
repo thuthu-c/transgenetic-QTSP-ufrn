@@ -288,18 +288,23 @@ graph.addEdge(4, 4, 4, 0);
     individuo_teste_dois = hgaAlgo.createIndividuals();
     std::vector<HGA::Individual> population;
     hgaAlgo.initializePopulation(graph);
-
+    
+    std::cout<< "A população inicial é: " << std::endl;
     for(auto p : hgaAlgo.getPopulation()){
         std::cout << "O custo do indivíduo é: " <<p.cost << std::endl;
         std::cout << "O custo do indivíduo calculado é: " <<hgaAlgo.cost(p.tour) << std::endl;
         std::cout << "A diversidade é: " << hgaAlgo.fd(p) << std::endl; 
         
+
+        std::cout<< "O indivíduo é: " << std::endl;
         for(auto v : p.tour){
-            std::cout << "vertice populacao" << v << std::endl; 
+            std::cout << v << std::endl; 
         }
         
         std::cout << "acabou a tour da populacao " << std::endl; 
     }
+    std::cout<< "final da população" << std::endl;
+
     
 
     // 

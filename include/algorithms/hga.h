@@ -46,6 +46,8 @@ class HGA : public TspSolver
     std::vector<int> getVertex();
     void setGraph(Graph &graph); 
 
+    long long int calculateInsertionCost(const std::vector<int>& tour, int pos, int vertex);
+
     std::vector<int> run(Graph& graph) override;
     HGA(int populationSize);
     ~HGA();
@@ -128,10 +130,10 @@ class HGA : public TspSolver
     //These initial individuals are also diversified and intensified by the mutation operator and LS procedure, respectively.
 
     // OPERADOR DE MUTACAO PARA DIVERSIDADE R&R (ruin and recreate)
-    void ruinAndRecreate(Individual indi);
+    void ruinAndRecreate(Individual& indi);
 
-    void ruin (Individual indi);
-    void recreate (Individual indi);
+    std::vector<int> ruin (Individual& indi);
+    void recreate (Individual& indi, std::vector<int> vertexToBeInserted);
 
     int generateNumberOfVertexToBeRemove(std::vector<int> tour);
 
@@ -144,9 +146,9 @@ class HGA : public TspSolver
     std::vector<int> blockRemovalHeuristic(Individual indi);
     HEURISTICS chooseRemovalHeuristic();
 
-    void lsProcedure(); 
+    std::vector<int> lsProcedure(std::vector<int> current_solution); 
 
-    std::vector<int> LocalSearch (Individual indi);
+    std::vector<int> LocalSearch (std::vector<int> current_solution);
 
     std::vector<int> L (int pos_u, int u, std::vector<int> V);
     int pred ( int pos_u,std::vector<int> tour);

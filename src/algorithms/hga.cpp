@@ -436,15 +436,10 @@ std::vector<int> HGA::ruin(Individual &indi){
 long long int HGA::calculateInsertionCost(const std::vector<int>& tour, int pos, int vertex) {
     int n = tour.size();
     
-    // Identificar os vizinhos envolvidos
-    // Sequência atual: ... -> h -> i -> j -> k -> ...
-    // Inserção entre i (pos) e j (pos+1)
-    // Nova sequência: ... -> h -> i -> v -> j -> k -> ...
     
     int i_idx = pos;
     int j_idx = (pos + 1) % n;
-    
-    // Precisamos de h (predecessor de i) e k (sucessor de j)
+
     int h_idx = (i_idx - 1 + n) % n;
     int k_idx = (j_idx + 1) % n;
 
@@ -453,13 +448,10 @@ long long int HGA::calculateInsertionCost(const std::vector<int>& tour, int pos,
     int j = tour[j_idx];
     int k = tour[k_idx];
 
-    // Custo removido (as triplas que deixam de existir)
-    // Triplas: (h, i, j) e (i, j, k)
     long long int removedCost = graph->custo[h][i][j] + 
                                 graph->custo[i][j][k];
 
-    // Custo adicionado (as novas triplas formadas pelo vértice v)
-    // Triplas: (h, i, v), (i, v, j), (v, j, k)
+
     long long int addedCost = graph->custo[h][i][vertex] + 
                               graph->custo[i][vertex][j] + 
                               graph->custo[vertex][j][k];
@@ -481,8 +473,7 @@ void HGA::recreate(Individual &indi, std::vector<int> vertexToBeInserted){
     for (int vertex : vertexToBeInserted) {
         long long int bestDelta = LLONG_MAX;
         int bestPos = -1;
-        
-        // Testa todas as posições possíveis na tour atual
+
         for (int i = 0; i < indi.tour.size(); ++i) {
             long long int currentDelta = calculateInsertionCost(indi.tour, i, vertex);
             
@@ -492,9 +483,6 @@ void HGA::recreate(Individual &indi, std::vector<int> vertexToBeInserted){
             }
         }
         
-        // Insere na melhor posição encontrada
-        // bestPos indica inserir DEPOIS do elemento bestPos (ou seja, na posição bestPos + 1)
-        // Nota: vector::insert insere ANTES do iterador, então usamos begin + bestPos + 1
         indi.tour.insert(indi.tour.begin() + bestPos + 1, vertex);
     }
 
@@ -808,9 +796,55 @@ bool HGA::Cond(int i1, int i2, int j1, int j2){
     return ((i1 + 1 == i2) ?  ((i2 + 1 == j1 ) ? true : ((j1 + 1 == j2 ) ? true : false)): false);
 }
 
-std::vector<int> HGA::FourOptNeighborhood(std::vector<int> tour){
+std::vector<int> fourOptMove(int i1, int i2, int j1, int j2, std::vector<int> tour){
+    // dividir a tour em quatro partes
+    std::vector<int> parte_um;
+    std::vector<int> parte_dois;
+    std::vector<int> parte_tres;
+    std::vector<int> parte_quatro;
 
+    int n = static_cast<int>(tour.size());
+    if (n == 0) return {};
+
+    auto append_range = [&](int start, int end, std::vector<int> &dest) {
+        int idx = start;
+        while (true) {
+            dest.push_back(tour[idx]);
+            if (idx == end) break;
+            idx = (idx + 1) % n;
+        }
+    };
+
+    // part1: from j2+1 to i1 (wrapping)
+    int s1 = (j2 + 1) % n;
+    int e1 = i1 % n;
+    append_range(s1, e1, parte_um);
+
+    // part2: from i1+1 to i2
+    int s2 = (i1 + 1) % n;
+    int e2 = i2 % n;
+    append_range(s2, e2, parte_dois);
+
+    // part3: from i2+1 to j1
+    int s3 = (i2 + 1) % n;
+    int e3 = j1 % n;
+    append_range(s3, e3, parte_tres);
+
+    // part4: from j1+1 to j2
+    int s4 = (j1 + 1) % n;
+    int e4 = j2 % n;
+    append_range(s4, e4, parte_quatro);
+
+    // montando a nova tour (example reconnection: 1 + 4 + 3 + 2)
+    std::vector<int> solution;
+    solution = parte_um;
+    solution.insert(solution.end(), parte_quatro.begin(), parte_quatro.end());
+    solution.insert(solution.end(), parte_tres.begin(), parte_tres.end());
+    solution.insert(solution.end(), parte_dois.begin(), parte_dois.end());
+
+    return solution;
 }
+
 
 
 

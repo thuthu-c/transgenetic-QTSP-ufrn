@@ -22,6 +22,7 @@ class HGA : public TspSolver
     protected: 
     int populationSize; 
     Graph *graph;
+    int itMax;
     
     public:
     std::mt19937 g;
@@ -45,11 +46,13 @@ class HGA : public TspSolver
     void shuffle_vertex(std::vector<int> &vertex);
     std::vector<int> getVertex();
     void setGraph(Graph &graph); 
+  std::pair<int, Individual*> selectParent(
+    std::vector<std::pair<int, Individual*>> &populationEvaluated);
 
     long long int calculateInsertionCost(const std::vector<int>& tour, int pos, int vertex);
 
     std::vector<int> run(Graph& graph) override;
-    HGA(int populationSize);
+    HGA(int populationSize, int itMax);
     ~HGA();
     
     // inicialização população
@@ -123,8 +126,8 @@ class HGA : public TspSolver
     
     void createPopulation();
 
-    std::vector<std::pair<int, HGA::Individual*>> initializePopulation(Graph &graph);
-    std::vector<std::pair<int, Individual*>> evaluatePopulation(std::vector<HGA::Individual> &population, Graph &graph);
+    void initializePopulation();
+    std::vector<std::pair<int, Individual*>> evaluatePopulation(std::vector<HGA::Individual> &population);
 
     //fazer o operador de mutacao para diversidade e intensificacao
     //These initial individuals are also diversified and intensified by the mutation operator and LS procedure, respectively.
@@ -168,6 +171,7 @@ class HGA : public TspSolver
     //LS procedure para intensificacao
 
     // seleção de pais
+    std::pair<Individual, Individual> tournamentSelection(const std::vector<Individual>& population);
     //crossover
         // ruin-and-recreate mutation
     //local serch

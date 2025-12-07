@@ -9,17 +9,23 @@
 #include <string>
 #include <vector>
 
-const long long int  uElite = 1000000; 
+const long long int  uElite = 5; 
 std::vector<long int> costsTriples;
 const int gama = 20;
 
 
 typedef std::tuple<int, int, int> triple;
 
+void print_tour(std::vector<int> tour){
+    for(auto t : tour){
+        std::cout << t << std::endl;
+    }
+}
 
 
 
-HGA::HGA(int populationSize) : populationSize(populationSize), graph(nullptr){
+
+HGA::HGA(int populationSize, int itMax) : populationSize(populationSize), graph(nullptr), itMax(itMax){
     std::random_device rd;
     g = std::mt19937(rd());
 }
@@ -27,7 +33,56 @@ void HGA::setGraph(Graph &graph){
     this->graph = &graph;
 }
 
-std::vector<int> HGA::run(Graph& graph){
+std::vector<int> HGA::run(Graph& graphInput){
+    graph = &graphInput;
+
+    initializePopulation();
+
+    std::vector<std::pair<int, Individual*>> evaluatedPopulation = evaluatePopulation(population); 
+
+    std::cout<<"a população evaluada:" << std::endl;
+
+    for(auto e : evaluatedPopulation){
+        std::cout << "o custo: " << e.first << std::endl;
+
+        std::cout << "os vértices: " << std::endl;
+        for(auto v : e.second->tour){
+            std::cout << v << std::endl; 
+        }
+    }
+
+    std::pair<int, Individual*> bestIndividual = evaluatedPopulation[0];
+    std::pair<int, Individual*> worstIndividual = evaluatedPopulation[0];
+    int worstIdx = 0;
+
+
+    std::cout << "o valor de itMax: " << itMax << std::endl;
+
+    
+    for (int generation = 0; generation < itMax; ++generation) {
+        std::cout<<"entrei pro torneio" << std::endl;
+        std::pair<int, Individual*> parentOne= selectParent(evaluatedPopulation);
+        std::pair<int, Individual*> parentTwo= selectParent(evaluatedPopulation);
+
+        while(parentTwo == parentOne) std::pair<int, Individual*> parentTwo= selectParent(evaluatedPopulation);
+        
+        std::cout<<" o parente escolhido foi: " << std::endl;
+        std::cout<<"primeiro parente: " << std::endl;
+        std::cout<<"custo: " << parentOne.first << std::endl;
+        for(auto i : parentOne.second->tour){
+            std::cout<<i<< std::endl;
+        }
+        std::cout<<"segundo parente: " << std::endl;
+        std::cout<<"custo: " << parentTwo.first << std::endl;
+        for(auto i : parentTwo.second->tour){
+            std::cout<<i<< std::endl;
+        }
+      
+    
+
+    }
+
+    return population[0].tour;
     
 }
 
@@ -81,6 +136,8 @@ HGA::Individual HGA::createIndividuals(){
         std::cout << s << " " << std::endl;
     }
 
+    //intensificar
+
     individual.tour = lsProcedure(solution2);
 
      std::cout << "Solução depois da intensificação" << " " << std::endl;
@@ -126,6 +183,12 @@ void HGA::createPopulation(){
 
 long long int HGA::cost (std::vector<int> tour){
 
+    std::cout<< "A tour que eu vou calcular o custo é: "<<std::endl;
+    for(auto t : tour){
+        std::cout << t << std::endl;
+    }
+
+    std::cout<<"sou eu aqui que to dando problema viu" << std::endl;
     long long int totalCost{0}; 
 
     std::vector<int> custo;
@@ -134,11 +197,16 @@ long long int HGA::cost (std::vector<int> tour){
 
 
     for(auto i{0}; i < n-2; ++i){
-        
+        std::cout<< "totalCost+= graph->custo[tour[i]][tour[i+1]][tour[i+2]] = " << graph->custo[tour[i]][tour[i+1]][tour[i+2]] << std::endl;
         totalCost+= graph->custo[tour[i]][tour[i+1]][tour[i+2]];
+
+        std::cout << "tour[i] : " << tour[i] << " tour[i+1] : " << tour[i+1] << " tour[i+2] : " << tour[i+2] << std::endl;
     }
 
+
+    std::cout<< "totalCost+= graph->custo[tour[n-2]][tour[n-1]][tour[0]] = " << graph->custo[tour[n-2]][tour[n-1]][tour[0]] << std::endl;
     totalCost+= graph->custo[tour[n-2]][tour[n-1]][tour[0]];
+    std::cout<< "totalCost+= graph->custo[tour[n-1]][tour[0]][tour[1]] =  " << graph->custo[tour[n-1]][tour[0]][tour[1]] << std::endl;
     totalCost+= graph->custo[tour[n-1]][tour[0]][tour[1]];
     return totalCost; 
 }
@@ -182,6 +250,8 @@ void HGA::individualCostRank(){
         setIndividualCost(*individual);
     }
 
+    std::cout<<"O problema é aqui claramente"<<std::endl;
+
     std::sort(copyPopulation.begin(), copyPopulation.end(), 
     [](const Individual *a, const Individual *b)
         {
@@ -192,8 +262,10 @@ void HGA::individualCostRank(){
         int cont{0}; 
         for(auto i : copyPopulation){
             //seta o rank de cada individuo na populção original
-            i->costRank = ++cont; 
+            i->costRank = cont++; 
         }
+
+    std::cout<<"terminei de setar o rank do custo" << std::endl;
 
 }
 
@@ -210,8 +282,7 @@ void HGA::individualDiversityRank ( ){
     for(auto individual : copyPopulation){
         setIndividualDiversityContribution(*individual);
     }
- // lista de triplas (dividindo o grafo que eu estou recebendo em todas as triplas possíveis para montar todos os ciclos hamiltonianos possíveis)
-    std::vector<triple> triples;
+
     std::sort(copyPopulation.begin(), copyPopulation.end(), 
     [](const Individual *a, const Individual *b)
         {
@@ -279,15 +350,22 @@ long int HGA::numberOfSuccesivesPairsInATourPiWhichAreNotIncludedInPj(HGA::Indiv
 }
 
 double HGA::biasedFitness (HGA::Individual individual){
-    return (fc(individual) + (1 - (uElite/populationSize)) * fd(individual));
+    // pq ta retonarnando negativo
+
+    std::cout<< "o cálculo é: fc(individual) : " << fc(individual) << "+ " << "(1 - (static_cast<double>(uElite)/populationSize)) : " <<  (1 - (static_cast<double>(uElite)/populationSize)) <<  " * fd(individual)): " << fd(individual) << std::endl;
+    return (fc(individual) + (1 - (static_cast<double>(uElite)/populationSize)) * fd(individual));
 }
 
-std::vector<std::pair<int, HGA::Individual*>> HGA::evaluatePopulation(std::vector<HGA::Individual> &population, Graph &graph){
+std::vector<std::pair<int, HGA::Individual*>> HGA::evaluatePopulation(std::vector<HGA::Individual> &population){
+
+    std::cout<<"oi chegamos aqui e o problema sou eu?"<<std::endl;
     std::vector<std::pair<int, HGA::Individual*>> evaluatedPopulation;
     int  cost{0};
 
-    for(auto i : population){
+    for(auto& i : population){
+        cost = 0;
         cost = biasedFitness(i);
+        std::cout << "O custo depois da função fitness: " << cost << std::endl;
         evaluatedPopulation.push_back(std::make_pair(cost, &i));
     }
 
@@ -297,17 +375,17 @@ std::vector<std::pair<int, HGA::Individual*>> HGA::evaluatePopulation(std::vecto
         return a.first < b.first;
     });
 
+    std::cout<<"o problema não sou eu não viu thuanny"<<std::endl;
+
     return evaluatedPopulation; 
 
 }
 
-std::vector<std::pair<int, HGA::Individual*>> HGA::initializePopulation(Graph &graph){
+
+void HGA::initializePopulation(){
     createPopulation();
     individualDiversityRank();
     individualCostRank();
-
-    return evaluatePopulation(getPopulation(), graph);
-
 }
 
 
@@ -765,7 +843,7 @@ std::vector<int> HGA::best4opt(std::vector<int> solution){
     }
 
     for(int i2 = 3; i2 <= n -5; ++i2){
-        DeltaStar[i2][i2 + 4] = F[i2][i2 + 2]; 
+        DeltaStar[i2][i2 + 4] = F[i2][i2 + 2];  
 
         for(int j2 = i2 + 5; j2 <= n-1; ++j2){
             DeltaStar[i2][j2] = std::min(DeltaStar[i2][j2 - 1], F[i2][j2 - 2]);
@@ -843,6 +921,34 @@ std::vector<int> fourOptMove(int i1, int i2, int j1, int j2, std::vector<int> to
     solution.insert(solution.end(), parte_dois.begin(), parte_dois.end());
 
     return solution;
+}
+
+std::pair<int, HGA::Individual*> HGA::selectParent(
+    std::vector<std::pair<int, Individual*>> &populationEvaluated)
+{
+   int tournamentSize = 2;
+    std::vector<std::pair<int, Individual*>> tournament(tournamentSize);
+    
+    for(int i = 0; i < tournamentSize; i++) {
+        int randIndex = std::rand() % populationEvaluated.size();
+        tournament[i] = populationEvaluated[randIndex];
+    }
+
+    std::pair<int, Individual*> best = tournament[0];
+
+
+    for(auto &competitor : tournament) {
+
+        std::cout<<"O torneio  é: " << std::endl;
+        print_tour(competitor.second->tour);
+        std::cout << "o valor a ser comparado é " << competitor.first << " e o melhor: " << best.first << std::endl;
+
+        if(competitor.first < best.first) {
+            best = competitor;
+        }
+    }
+
+    return best;
 }
 
 

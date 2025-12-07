@@ -148,6 +148,8 @@ int main(int argc, char *argv[])
 {
     // if(isMemetic) runMemetic(argc,argv);
     // else runTabu(argc,argv);
+
+
     Graph graph(5); // Assuming 5 nodes for this example
 
 graph.addEdge(0, 0, 0, 0);
@@ -276,7 +278,7 @@ graph.addEdge(4, 4, 2, 0);
 graph.addEdge(4, 4, 3, 0);
 graph.addEdge(4, 4, 4, 0);
 
-    HGA hgaAlgo(10);
+    HGA hgaAlgo(10, 5);
     HGA::Individual individuo_teste;
     HGA::Individual individuo_teste_dois;
     hgaAlgo.setGraph(graph);
@@ -284,10 +286,8 @@ graph.addEdge(4, 4, 4, 0);
     int heuristic = hgaAlgo.chooseRemovalHeuristic();
     std::cout<<"A heurística escolhida foi: " << heuristic << std::endl;
     
-    individuo_teste = hgaAlgo.createIndividuals();
-    individuo_teste_dois = hgaAlgo.createIndividuals();
     std::vector<HGA::Individual> population;
-    hgaAlgo.initializePopulation(graph);
+    hgaAlgo.run(graph);
     
     std::cout<< "A população inicial é: " << std::endl;
     for(auto p : hgaAlgo.getPopulation()){

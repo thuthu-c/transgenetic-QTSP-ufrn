@@ -12,6 +12,7 @@
 const long long int  uElite = 5; 
 std::vector<long int> costsTriples;
 const int gama = 20;
+extern std::mt19937 engine;
 
 
 typedef std::tuple<int, int, int> triple;
@@ -35,54 +36,101 @@ void HGA::setGraph(Graph &graph){
 
 std::vector<int> HGA::run(Graph& graphInput){
     graph = &graphInput;
+    std::uniform_real_distribution<double> distribution(0, 1);
+    double p_mut = 0.9;
 
     initializePopulation();
 
     std::vector<std::pair<int, Individual*>> evaluatedPopulation = evaluatePopulation(population); 
-
-    std::cout<<"a população evaluada:" << std::endl;
-
-    for(auto e : evaluatedPopulation){
-        std::cout << "o custo: " << e.first << std::endl;
-
-        std::cout << "os vértices: " << std::endl;
-        for(auto v : e.second->tour){
-            std::cout << v << std::endl; 
-        }
-    }
 
     std::pair<int, Individual*> bestIndividual = evaluatedPopulation[0];
     std::pair<int, Individual*> worstIndividual = evaluatedPopulation[0];
     int worstIdx = 0;
 
 
-    std::cout << "o valor de itMax: " << itMax << std::endl;
-
     
     for (int generation = 0; generation < itMax; ++generation) {
-        std::cout<<"entrei pro torneio" << std::endl;
-        std::pair<int, Individual*> parentOne= selectParent(evaluatedPopulation);
-        std::pair<int, Individual*> parentTwo= selectParent(evaluatedPopulation);
-
-        while(parentTwo == parentOne) std::pair<int, Individual*> parentTwo= selectParent(evaluatedPopulation);
-        
-        std::cout<<" o parente escolhido foi: " << std::endl;
-        std::cout<<"primeiro parente: " << std::endl;
-        std::cout<<"custo: " << parentOne.first << std::endl;
-        for(auto i : parentOne.second->tour){
-            std::cout<<i<< std::endl;
-        }
-        std::cout<<"segundo parente: " << std::endl;
-        std::cout<<"custo: " << parentTwo.first << std::endl;
-        for(auto i : parentTwo.second->tour){
-            std::cout<<i<< std::endl;
-        }
-      
     
-
+    // 1. Seleção (Retorne objetos, não ponteiros, se possível, ou dereferencie com cuidado)
+    std::pair<int, Individual*> parent1Ptr = selectParent(evaluatedPopulation);
+    std::pair<int, Individual*> parent2Ptr = selectParent(evaluatedPopulation);
+    
+    // Garante pais diferentes
+    while(parent1Ptr == parent2Ptr) {
+        parent2Ptr = selectParent(evaluatedPopulation);
     }
 
-    return population[0].tour;
+    // 2. Crossover (Gera um NOVO objeto na heap, cuidado!)
+    std::pair<int, Individual*> offspringPair = crossover(parent1Ptr, parent2Ptr);
+    
+    // COPIE para um objeto local para trabalhar com segurança
+    Individual offspringIndi = *(offspringPair.second); 
+    
+    // IMPORTANTE: Libere a memória alocada no crossover imediatamente após copiar
+    delete offspringPair.second; 
+
+    // 3. Mutação
+    if(distribution(engine) < p_mut){
+        ruinAndRecreate(offspringIndi); // Modifica offspringIndi
+    }
+
+    // 4. Busca Local
+    offspringIndi.tour = lsProcedure(offspringIndi.tour);
+    
+    // Recalcula custo e propriedades finais
+    offspringIndi.cost = cost(offspringIndi.tour);
+    // Zere os ranks pois ele é novo e ainda não está na população
+    offspringIndi.costRank = -1; 
+    offspringIndi.diversityRank = -1;
+
+    // 5. ATUALIZAÇÃO DA POPULAÇÃO (O que faltava!)
+    // Substitua o pior da população atual se o filho for melhor
+    // (Ou adicione e remova, conforme o artigo. Aqui faremos substituição simples para funcionar)
+    
+    // Acha o pior (último da lista ordenada evaluatedPopulation)
+    int worstIndexInPop = -1;
+    // Como evaluatedPopulation tem ponteiros para 'population', precisamos achar o índice real
+    // Simplificação: Adicione o filho na população e remova o pior
+    
+    population.push_back(offspringIndi); // Adiciona filho
+    
+    // Recalcula Ranks e Diversidade da população inteira
+    individualCostRank();
+    individualDiversityRank(); // Isso é pesado, mas necessário para o HGA funcionar
+    
+    // Avalia e Ordena
+    evaluatedPopulation = evaluatePopulation(population);
+    
+    // Remove o pior (o último da lista ordenada por biasedFitness)
+    // O evaluatedPopulation[size-1] é o pior.
+    Individual* worstPtr = evaluatedPopulation.back().second;
+    
+    // Encontrar esse ponteiro no vetor original 'population' e remover
+    // Nota: Remover de vector invalida ponteiros. Reconstrua evaluatedPopulation na proxima iteração.
+    for(auto it = population.begin(); it != population.end(); ++it) {
+        if ( &(*it) == worstPtr ) {
+            population.erase(it);
+            break;
+        }
+    }
+    if (offspringIndi.cost < bestIndividual.first) {
+        std::cout << "Novo melhor encontrado: " << offspringIndi.cost << std::endl;
+        // Salve uma CÓPIA do melhor, não um ponteiro que pode ser deletado
+        // Crie um atributo na classe: Individual bestSolutionObj;
+         Individual bestSolutionObj = offspringIndi;
+         bestIndividual = {offspringIndi.cost, &bestSolutionObj}; 
+    }
+
+}
+
+    std::cout << "A solução que eu to mandando pra main é" << std::endl;
+    if (bestIndividual.second != nullptr) {
+        print_tour(bestIndividual.second->tour);
+        return bestIndividual.second->tour;
+    } else {
+        std::cout << "Nenhum indivíduo válido encontrado. Retornando solução vazia." << std::endl;
+        return std::vector<int>();
+    }
     
 }
 
@@ -183,12 +231,6 @@ void HGA::createPopulation(){
 
 long long int HGA::cost (std::vector<int> tour){
 
-    std::cout<< "A tour que eu vou calcular o custo é: "<<std::endl;
-    for(auto t : tour){
-        std::cout << t << std::endl;
-    }
-
-    std::cout<<"sou eu aqui que to dando problema viu" << std::endl;
     long long int totalCost{0}; 
 
     std::vector<int> custo;
@@ -197,16 +239,16 @@ long long int HGA::cost (std::vector<int> tour){
 
 
     for(auto i{0}; i < n-2; ++i){
-        std::cout<< "totalCost+= graph->custo[tour[i]][tour[i+1]][tour[i+2]] = " << graph->custo[tour[i]][tour[i+1]][tour[i+2]] << std::endl;
+        // std::cout<< "totalCost+= graph->custo[tour[i]][tour[i+1]][tour[i+2]] = " << graph->custo[tour[i]][tour[i+1]][tour[i+2]] << std::endl;
         totalCost+= graph->custo[tour[i]][tour[i+1]][tour[i+2]];
 
-        std::cout << "tour[i] : " << tour[i] << " tour[i+1] : " << tour[i+1] << " tour[i+2] : " << tour[i+2] << std::endl;
+        // std::cout << "tour[i] : " << tour[i] << " tour[i+1] : " << tour[i+1] << " tour[i+2] : " << tour[i+2] << std::endl;
     }
 
 
-    std::cout<< "totalCost+= graph->custo[tour[n-2]][tour[n-1]][tour[0]] = " << graph->custo[tour[n-2]][tour[n-1]][tour[0]] << std::endl;
+    // std::cout<< "totalCost+= graph->custo[tour[n-2]][tour[n-1]][tour[0]] = " << graph->custo[tour[n-2]][tour[n-1]][tour[0]] << std::endl;
     totalCost+= graph->custo[tour[n-2]][tour[n-1]][tour[0]];
-    std::cout<< "totalCost+= graph->custo[tour[n-1]][tour[0]][tour[1]] =  " << graph->custo[tour[n-1]][tour[0]][tour[1]] << std::endl;
+    // std::cout<< "totalCost+= graph->custo[tour[n-1]][tour[0]][tour[1]] =  " << graph->custo[tour[n-1]][tour[0]][tour[1]] << std::endl;
     totalCost+= graph->custo[tour[n-1]][tour[0]][tour[1]];
     return totalCost; 
 }
@@ -346,26 +388,26 @@ long int HGA::numberOfSuccesivesPairsInATourPiWhichAreNotIncludedInPj(HGA::Indiv
         const auto unsucceeded = pairsPj.end();
         if( search != unsucceeded) numberOfSuccesivesPairsInATourPiWhichAreNotIncludedInPj++;
     }
-    return numberOfSuccesivesPairsInATourPiWhichAreNotIncludedInPj; 
+    return numberOfSuccesivesPairsInATourPiWhichAreNotIncludedInPj;
 }
 
-double HGA::biasedFitness (HGA::Individual individual){
-    // pq ta retonarnando negativo
+int HGA::biasedFitness (HGA::Individual individual){
+    // Lower values of biasedFitness indicate better fitness.
+    // If negative values are returned, check if this is expected for your problem instance.
 
-    std::cout<< "o cálculo é: fc(individual) : " << fc(individual) << "+ " << "(1 - (static_cast<double>(uElite)/populationSize)) : " <<  (1 - (static_cast<double>(uElite)/populationSize)) <<  " * fd(individual)): " << fd(individual) << std::endl;
-    return (fc(individual) + (1 - (static_cast<double>(uElite)/populationSize)) * fd(individual));
+    if (fc(individual) == -1 || fd(individual) == -1) return INT_MAX;
+    
+    return fc(individual) + (1 - ((double)uElite/populationSize)) * fd(individual);
 }
 
 std::vector<std::pair<int, HGA::Individual*>> HGA::evaluatePopulation(std::vector<HGA::Individual> &population){
 
-    std::cout<<"oi chegamos aqui e o problema sou eu?"<<std::endl;
     std::vector<std::pair<int, HGA::Individual*>> evaluatedPopulation;
     int  cost{0};
 
     for(auto& i : population){
         cost = 0;
         cost = biasedFitness(i);
-        std::cout << "O custo depois da função fitness: " << cost << std::endl;
         evaluatedPopulation.push_back(std::make_pair(cost, &i));
     }
 
@@ -375,7 +417,6 @@ std::vector<std::pair<int, HGA::Individual*>> HGA::evaluatePopulation(std::vecto
         return a.first < b.first;
     });
 
-    std::cout<<"o problema não sou eu não viu thuanny"<<std::endl;
 
     return evaluatedPopulation; 
 
@@ -543,14 +584,21 @@ void HGA::recreate(Individual &indi, std::vector<int> vertexToBeInserted){
         std::cout<< s << std::endl;
     }
 
-    std::vector<int> vertex = indi.tour;
     shuffle_vertex(vertexToBeInserted);
     // indi.tour.clear();
-    
-
     for (int vertex : vertexToBeInserted) {
+        // Check for duplicates before insertion
+        if (std::find(indi.tour.begin(), indi.tour.end(), vertex) != indi.tour.end()) {
+            continue; // Skip if vertex already exists in the tour
+        }
+
         long long int bestDelta = LLONG_MAX;
         int bestPos = -1;
+
+        if (indi.tour.empty()) {
+            indi.tour.push_back(vertex);
+            continue;
+        }
 
         for (int i = 0; i < indi.tour.size(); ++i) {
             long long int currentDelta = calculateInsertionCost(indi.tour, i, vertex);
@@ -599,41 +647,26 @@ std::vector<int> HGA::LocalSearch (std::vector<int> current_solution){
 
     bool imp = true; 
 
-    
-    std::cout<< "Os vértices V é: " << std::endl;
-                        for(auto s : V){
-                            std::cout<< s << std::endl;
-                        }
-    std::cout << "vou entrar no while, me aguarde" << std::endl;
     while(imp){
         imp = false; 
         std::vector<int> solu_aux = solution; 
         int pos{0};
         for(auto u: V){
             std::vector<int> Li = L(pos,u, V);
-            std::cout<< "A Lista Li é: " << std::endl;
-                        for(auto s : Li){
-                            std::cout<< s << std::endl;
-                        }
+
             
             for(auto v: Li){
                 for(auto i{1}; i <= 7; ++i){
-                    std::cout<< "valor de i é: " << i << std::endl;
+                 
                     if(i == 1){
-                        std:: cout<< "v é: " << v << std::endl;
-                        std:: cout<< "u é: " << u << std::endl;
+                       
                         auto it_p = std::find(solu_aux.begin(), solu_aux.end(), v);
                         solu_aux.erase(it_p);
                         auto it_pos = std::find(solu_aux.begin(), solu_aux.end(), u);
                         solu_aux.insert(it_pos+1, v);
-                        std::cout<< "A solução é: " << std::endl;
-                        for(auto s : solu_aux){
-                            std::cout<< s << std::endl;
-                        }
                     }
                     if(i == 2){
-                        std:: cout<< "v é: " << v << std::endl;
-                        std:: cout<< "u é: " << u << std::endl;
+              
                         auto it_v = std::find(solu_aux.begin(), solu_aux.end(), v);
                         auto it_pos = std::find(solu_aux.begin(), solu_aux.end(), u);
                         if(it_v == it_pos+1){
@@ -642,11 +675,7 @@ std::vector<int> HGA::LocalSearch (std::vector<int> current_solution){
                             std::vector<int> arc(it_v, it_v+1);
                             solu_aux.erase(it_v, it_v+1);
                             solu_aux.insert(solu_aux.begin() + pos + 1, arc.begin(), arc.end());
-                        }
-                        std::cout<< "A solução é: " << std::endl;
-                        for(auto s : solu_aux){
-                            std::cout<< s << std::endl;
-                        }
+                        
                     }
                     if(i == 3){
                          auto it_v = std::find(solu_aux.begin(), solu_aux.end(), v);
@@ -657,10 +686,6 @@ std::vector<int> HGA::LocalSearch (std::vector<int> current_solution){
                             std::swap(solu_aux[pos+1], v); 
                         }
                         
-                         std::cout<< "A solução é: " << std::endl;
-                        for(auto s : solu_aux){
-                            std::cout<< s << std::endl;
-                        }
                     }
                     if(i == 4){
                         auto it_v = std::find(solu_aux.begin(), solu_aux.end(), v);
@@ -672,11 +697,6 @@ std::vector<int> HGA::LocalSearch (std::vector<int> current_solution){
                             solu_aux.insert(solu_aux.begin()+pos+2,Li[pos+1]);
                             Li.erase (Li.begin()+pos+1);
                         }
-                        
-                         std::cout<< "A solução é: " << std::endl;
-                        for(auto s : solu_aux){
-                            std::cout<< s << std::endl;
-                        }
                     }
                     if(i == 5){
                         auto it_v = std::find(solu_aux.begin(), solu_aux.end(), v);
@@ -686,11 +706,6 @@ std::vector<int> HGA::LocalSearch (std::vector<int> current_solution){
                         }else{
                             std::swap(solu_aux[pos+1], v);
                             solu_aux.erase (solu_aux.begin()+pos+2);
-                        }
-                        
-                         std::cout<< "A solução é: " << std::endl;
-                        for(auto s : solu_aux){
-                            std::cout<< s << std::endl;
                         }
                     }
                     if(i == 6){
@@ -703,10 +718,6 @@ std::vector<int> HGA::LocalSearch (std::vector<int> current_solution){
                             std::swap(solu_aux[pos+2], Li[pos+1]);
                         }
                         
-                        std::cout<< "A solução é: " << std::endl;
-                        for(auto s : solu_aux){
-                            std::cout<< s << std::endl;
-                        }
                     }
                     if(i ==7){
                         auto it_v = std::find(solu_aux.begin(), solu_aux.end(), v);
@@ -727,13 +738,7 @@ std::vector<int> HGA::LocalSearch (std::vector<int> current_solution){
                             std::reverse(sequence.begin(),sequence.end());
                             solu_aux.insert(solu_aux.begin()+pos, sequence.begin(), sequence.end());
                         }
-
-                        
-
-                         std::cout<< "A solução é: " << std::endl;
-                        for(auto s : solu_aux){
-                            std::cout<< s << std::endl;
-                        }
+}
                     }
 
                     if(cost(solu_aux) < cost(solution)){
@@ -742,22 +747,12 @@ std::vector<int> HGA::LocalSearch (std::vector<int> current_solution){
                         break;
                     }
 
-                     std::cout << "passei por tudo bonitinho" << std::endl;
-
 
                 }
             }
             
             ++pos;
-
-            std::cout << "a posição é: " << pos<< std::endl;
-            std::cout<< "A solução depois da posição é: " << std::endl;
-                        for(auto s : solu_aux){
-                            std::cout<< s << std::endl;
-                        }
         }
-
-        std::cout << "acabou a putaria!!! " << pos<< std::endl;
 
         if(use4Opt && !imp){
             solu_aux = best4opt(solution);
@@ -769,10 +764,6 @@ std::vector<int> HGA::LocalSearch (std::vector<int> current_solution){
 
     }
 
-    std::cout<< "A solução retornada é: " << std::endl;
-                        for(auto s : solution){
-                            std::cout<< s << std::endl;
-                        }
     return solution;
 }
 
@@ -805,17 +796,15 @@ std::vector<int> HGA::L (int pos_u, int u, std::vector<int> V){
 
 }
 
+inline int get_safe(const std::vector<int>& tour, int i) {
+    int n = tour.size();
+    return tour[((i % n) + n) % n];
+}
 
-//retornar o vértice predecessor de u
-int HGA::pred ( int pos_u,std::vector<int> tour){
-    if( pos_u == 0){
-        return tour[tour.size()-1];
-    }else{
-
-        return tour[pos_u-1];
-    }
-
-
+// Substitua sua função pred por esta:
+int HGA::pred(int pos_u, std::vector<int> tour){
+    // Usa a função segura para pegar o anterior
+    return get_safe(tour, pos_u - 1);
 }
 
 long long int HGA::pi(int pos_u,int u, int v, std::vector<int> tour ){
@@ -823,58 +812,108 @@ long long int HGA::pi(int pos_u,int u, int v, std::vector<int> tour ){
 }
 
 
-//guardar o melhor a tour com o melhor movimento 4opt baseado no menor delta delta
-std::vector<int> HGA::best4opt(std::vector<int> solution){
-    double BEST = std::numeric_limits<double>::infinity(); 
+std::vector<int> HGA::best4opt(std::vector<int> solution) {
     int n = solution.size();
-    // if(Cond(i1, i2, j1, j2)){
-    //     BEST = std::min(BEST, static_cast<double>(delta(i1, i2, j1, j2)));
-    // }
+    if (n < 8) return solution;
 
-    std::vector<std::vector<double>> F(n + 1, std::vector<double>(n + 1));
-    std::vector<std::vector<double>> DeltaStar(n + 1, std::vector<double>(n + 1));
+    // Tabelas da DP
+    // F[i2][j1] armazena o melhor custo parcial
+    // Parent[i2][j1] armazena qual i1 gerou esse custo (para reconstrução)
+    std::vector<std::vector<double>> F(n, std::vector<double>(n, 1e18));
+    std::vector<std::vector<int>> parent_i1(n, std::vector<int>(n, -1));
 
-    for(int j1= 5; j1 <= n-3; ++j1){
-        F[7][j1] = D2O(1, j1);
+    // Inicialização (Algoritmo 2 linha 3) - Corrigido índice 7 para 2 (base 0) que equivale ao 3 do artigo
+    for(int j1 = 4; j1 <= n - 4; ++j1) {
+        F[2][j1] = D2O(0, j1, solution); // Assume i1 = 0
+        parent_i1[2][j1] = 0;
+    }
 
-        for(int i2 = 4; i2 <= j1 -2; ++i2){
-            F[i2][j1] =  std::min(F[i2 - 1][j1], static_cast<double>(D2O(i2 - 2, j1)));
+    // Recursão (Algoritmo 2 linhas 4-6)
+    for(int i2 = 3; i2 <= n - 5; ++i2) {
+        for(int j1 = i2 + 2; j1 <= n - 3; ++j1) {
+            double val_stay = F[i2 - 1][j1];
+            double val_new  = D2O(i2 - 1, j1, solution); // Novo corte
+            
+            // Simplificação da recorrência: escolhe o melhor entre estender ou novo corte
+            // Nota: A lógica exata da Eq 13 pode variar, mas a ideia é minimizar custo
+            if (val_new < val_stay) {
+                F[i2][j1] = val_new;
+                parent_i1[i2][j1] = i2 - 1; 
+            } else {
+                F[i2][j1] = val_stay;
+                parent_i1[i2][j1] = parent_i1[i2-1][j1];
+            }
         }
     }
 
-    for(int i2 = 3; i2 <= n -5; ++i2){
-        DeltaStar[i2][i2 + 4] = F[i2][i2 + 2];  
+    // Parte 2: Encontrar o melhor Delta* (combinação dos cortes)
+    double best_improvement = -0.000001; // Só aceita se melhorar (negativo)
+    int best_i1 = -1, best_i2 = -1, best_j1 = -1, best_j2 = -1;
 
-        for(int j2 = i2 + 5; j2 <= n-1; ++j2){
-            DeltaStar[i2][j2] = std::min(DeltaStar[i2][j2 - 1], F[i2][j2 - 2]);
-
-            double Delta_Best_current = D2O(i2, j2) + DeltaStar[i2][j2];
-
-            BEST = std::min(BEST, Delta_Best_current);
+    for(int i2 = 3; i2 <= n - 5; ++i2) {
+        for(int j2 = i2 + 5; j2 <= n - 1; ++j2) {
+            // Varredura simplificada para achar o melhor j1 compatível
+            for(int j1 = i2 + 2; j1 <= j2 - 2; ++j1) {
+                double current_delta = D2O(i2, j2, solution) + F[i2][j1];
+                
+                if(current_delta < best_improvement) {
+                    best_improvement = current_delta;
+                    best_i2 = i2;
+                    best_j2 = j2;
+                    best_j1 = j1;
+                    best_i1 = parent_i1[i2][j1];
+                }
+            }
         }
-        
     }
 
-    // No 4-opt move implemented yet; return the (possibly unchanged) solution
-    return solution;
+    // Se encontrou melhora, APLICA O MOVIMENTO
+    if(best_i2 != -1) {
+        // std::cout << "Aplicando Double Bridge! Melhora: " << best_improvement << std::endl;
+        return fourOptMove(best_i1, best_i2, best_j1, best_j2, solution);
+    }
+
+    return solution; // Sem melhora
 }
 
-long long int HGA::D2O (int i, int j){
-    return graph->custo[i-1][i][j+1] + graph->custo[i][j+1][j+2]
-         + graph->custo[j][i+1][i+2] + graph->custo[j-1][j][i+1]
-         - graph->custo[i-1][i][i+1] - graph->custo[i][i+1][i+2]
-         - graph->custo[j-1][j][j+1] - graph->custo[j][j+1][j+2];
+long long int HGA::D2O(int i, int j, std::vector<int> tour) {
+    // Note o uso de get_safe para TODOS os índices que podem ser i-1 ou j+2 (que estoura o tamanho)
+    
+    int vi_minus_1 = get_safe(tour, i - 1);
+    int vi         = get_safe(tour, i);
+    int vi_plus_1  = get_safe(tour, i + 1);
+    int vi_plus_2  = get_safe(tour, i + 2); // Necessário para a aresta (i, i+1, i+2)
+
+    int vj_minus_1 = get_safe(tour, j - 1);
+    int vj         = get_safe(tour, j);
+    int vj_plus_1  = get_safe(tour, j + 1);
+    int vj_plus_2  = get_safe(tour, j + 2);
+
+    // Agora usamos os VÉRTICES seguros para acessar a matriz de custo
+    long long int removed = 
+          graph->custo[vi_minus_1][vi][vi_plus_1] 
+        + graph->custo[vi][vi_plus_1][vi_plus_2]
+        + graph->custo[vj_minus_1][vj][vj_plus_1] 
+        + graph->custo[vj][vj_plus_1][vj_plus_2];
+
+    long long int added = 
+          graph->custo[vi_minus_1][vi][vj_plus_1] 
+        + graph->custo[vi][vj_plus_1][vj_plus_2]
+        + graph->custo[vj][vi_plus_1][vi_plus_2] 
+        + graph->custo[vj_minus_1][vj][vi_plus_1];
+
+    return added - removed;
 }
 
-long long int HGA::delta(int i1, int i2, int j1, int j2){
-    return D2O(i1, j1) + D2O(i2, j2);
-}
+// long long int HGA::delta(int i1, int i2, int j1, int j2){
+//     return D2O(i1, j1) + D2O(i2, j2);
+// }
 
 bool HGA::Cond(int i1, int i2, int j1, int j2){
     return ((i1 + 1 == i2) ?  ((i2 + 1 == j1 ) ? true : ((j1 + 1 == j2 ) ? true : false)): false);
 }
 
-std::vector<int> fourOptMove(int i1, int i2, int j1, int j2, std::vector<int> tour){
+std::vector<int> HGA::fourOptMove(int i1, int i2, int j1, int j2, std::vector<int> tour){
     // dividir a tour em quatro partes
     std::vector<int> parte_um;
     std::vector<int> parte_dois;
@@ -949,6 +988,85 @@ std::pair<int, HGA::Individual*> HGA::selectParent(
     }
 
     return best;
+}
+
+HGA::Individual* HGA::generateOffspring(std::pair<int, Individual*> &mother, std::pair<int, Individual*> &father)
+{
+    int n = mother.second->tour.size();
+    int random1 = -1;
+    int random2 = -1;
+
+    std::uniform_int_distribution<int> distribution(0, n - 1);
+
+    std::vector<int> offspring(n, -1);
+
+    // generate two random positions
+    while (true)
+    {
+        random1 = distribution(engine);
+        random2 = distribution(engine);
+        if (random1 != random2)
+        {
+            break;
+        }
+    }
+
+    if (random1 > random2)
+    {
+        std::swap(random1, random2);
+    }
+
+    // copy the segment of mother to the offspring
+    std::vector<int> motherSlice(mother.second->tour.begin() + random1, mother.second->tour.begin() + random2);
+
+    for (int i = random1; i < random2; i++)
+    {
+        offspring[i] = mother.second->tour[i];
+    }
+
+    // executes a cyclic traverse in father and fill the offspring's blanks
+    int i = random2;
+    int offspringIndex = i % n;
+    for (int _ = 0; _ < n; _++)
+    {
+        int circularIndex = i % n;
+
+        bool offspringHasNotFatherElem = std::find(
+                                             motherSlice.begin(),
+                                             motherSlice.end(),
+                                             father.second->tour[circularIndex]) == motherSlice.end();
+
+        if (offspringHasNotFatherElem)
+        {
+            offspring[offspringIndex] = father.second->tour[circularIndex];
+            offspringIndex = (offspringIndex + 1) % n;
+        }
+
+        i += 1;
+    }
+
+    Individual* individual = new Individual();
+    individual->tour = offspring;
+
+    return individual;
+}
+
+std::pair<int, HGA::Individual*> HGA::crossover(
+   std::pair<int, Individual*> &mother,
+    std::pair<int, Individual*> &father)
+{
+    auto offspring1 = generateOffspring(mother, father);
+    auto offspring2 = generateOffspring(father, mother);
+
+    int offspring1Val = biasedFitness(*offspring1);
+    int offspring2Val = biasedFitness(*offspring2);
+
+    if (offspring1Val < offspring2Val)
+    {
+        return std::make_pair(offspring1Val, offspring1);
+    }
+
+    return std::make_pair(offspring2Val, offspring2);
 }
 
 

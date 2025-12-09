@@ -43,10 +43,14 @@ class HGA : public TspSolver
 
     std::vector<Individual> population;
     std::vector<Individual>& getPopulation();
+    Individual* generateOffspring(std::pair<int, Individual*> &mother,std::pair<int, Individual*>&father);
+    std::pair<int, Individual*> crossover(
+    std::pair<int, Individual*> &mother,
+    std::pair<int, Individual*> &father);
     void shuffle_vertex(std::vector<int> &vertex);
     std::vector<int> getVertex();
     void setGraph(Graph &graph); 
-  std::pair<int, Individual*> selectParent(
+    std::pair<int, Individual*> selectParent(
     std::vector<std::pair<int, Individual*>> &populationEvaluated);
 
     long long int calculateInsertionCost(const std::vector<int>& tour, int pos, int vertex);
@@ -67,7 +71,7 @@ class HGA : public TspSolver
      * @tparam FwrdIt A forward iterator to the range we need to sort.
      * @tparam Comparator A Comparator type function tha returns true if first argument is less than the second argument.
      */
-    double biasedFitness (Individual individual); 
+    int biasedFitness (Individual individual); 
 
 
      /*!
@@ -160,13 +164,13 @@ class HGA : public TspSolver
 
     std::vector<int> best4opt(std::vector<int> solution);
 
-    long long int D2O (int i, int j);
+    long long int D2O (int i, int j, std::vector<int> tour);
     long long int delta(int i1, int i2, int j1, int j2);
 
     bool Cond(int i1, int i2, int j1, int j2); 
 
     std::vector<int> FourOptNeighborhood(std::vector<int> tour);
-
+    std::vector<int> fourOptMove(int i1, int i2, int j1, int j2, std::vector<int> tour);
     
     //LS procedure para intensificacao
 

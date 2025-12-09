@@ -4,6 +4,7 @@
 using namespace std;
 
 #include "../include/algorithms/tabu_memetic.h"
+#include "../include/algorithms/memetic.h"
 #include "../include/algorithms/hga.h"
 #include <climits>
 #include <string>
@@ -287,23 +288,44 @@ graph.addEdge(4, 4, 4, 0);
     std::cout<<"A heurística escolhida foi: " << heuristic << std::endl;
     
     std::vector<HGA::Individual> population;
-    hgaAlgo.run(graph);
+    std::vector<int> solution = hgaAlgo.run(graph);
+
+    std:cout << "A solução final é: " << std::endl;
+
+    for(auto s : solution){
+        std::cout << s << std::endl;
+    }
+
+    std::cout << "O custo é " << std::endl;
+    std::cout << hgaAlgo.cost(solution) << std::endl;
+
+    Memetic memeAlgo(5, 10, 0.9, 0.9);
+    std::vector<int> memesolution = memeAlgo.run(graph);
+
+    std::cout << "A solução meme final é: " << std::endl;
+
+    for(auto s : memesolution){
+        std::cout << s << std::endl;
+    }
+
+    std::cout << "O custo meme é " << std::endl;
+    std::cout << memeAlgo.eval(memesolution, graph) << std::endl;
     
-    std::cout<< "A população inicial é: " << std::endl;
-    for(auto p : hgaAlgo.getPopulation()){
-        std::cout << "O custo do indivíduo é: " <<p.cost << std::endl;
-        std::cout << "O custo do indivíduo calculado é: " <<hgaAlgo.cost(p.tour) << std::endl;
-        std::cout << "A diversidade é: " << hgaAlgo.fd(p) << std::endl; 
+    // std::cout<< "A população inicial é: " << std::endl;
+    // for(auto p : hgaAlgo.getPopulation()){
+    //     std::cout << "O custo do indivíduo é: " <<p.cost << std::endl;
+    //     std::cout << "O custo do indivíduo calculado é: " <<hgaAlgo.cost(p.tour) << std::endl;
+    //     std::cout << "A diversidade é: " << hgaAlgo.fd(p) << std::endl; 
         
 
-        std::cout<< "O indivíduo é: " << std::endl;
-        for(auto v : p.tour){
-            std::cout << v << std::endl; 
-        }
+    //     std::cout<< "O indivíduo é: " << std::endl;
+    //     for(auto v : p.tour){
+    //         std::cout << v << std::endl; 
+    //     }
         
-        std::cout << "acabou a tour da populacao " << std::endl; 
-    }
-    std::cout<< "final da população" << std::endl;
+    //     std::cout << "acabou a tour da populacao " << std::endl; 
+    // }
+    // std::cout<< "final da população" << std::endl;
 
     
 

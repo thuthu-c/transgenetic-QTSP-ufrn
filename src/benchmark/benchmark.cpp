@@ -16,6 +16,7 @@
 #include "../../include/algorithms/genetic_improved.h"
 #include "../../include/algorithms/another_genetic.h"
 #include "../../include/algorithms/tabu_memetic.h"
+#include "../../include/algorithms/hga.h"
 
 Benchmark::Benchmark(
     int maxEvaluations,
@@ -137,6 +138,7 @@ void writeResult(
 
 std::string getAlgorithmName(TspSolver *solver)
 {
+
     if (dynamic_cast<BruteForce *>(solver))
     {
         return "BruteForce";
@@ -162,14 +164,23 @@ std::string getAlgorithmName(TspSolver *solver)
         return "Tabu Search Memetic";
 
     }
+    else if(dynamic_cast<HGA*>(solver)){
+        return "HGA";
+    }
     return "AnotherGenetic";
 }
 
 void run(TspSolver *solver, std::string graphFilename, std::ofstream &file)
 {
+    std::cout << "DEBUG 1: Verificando ponteiro solver: " << solver << std::endl;
+    if (solver == nullptr) { std::cout << "ERRO: Solver é nulo!" << std::endl; return; } 
+
+
     std::string solverName = getAlgorithmName(solver);
+    std::cout << "DEBUG 2: Nome do algoritmo: " << solverName << std::endl;
 
     GraphIO graphio;
+    std::cout << "DEBUG 3: Tentando ler arquivo: " << graphFilename << std::endl;
     graphio.read(graphFilename);
     Graph graph = graphio.getGraph();
 
@@ -180,12 +191,17 @@ void run(TspSolver *solver, std::string graphFilename, std::ofstream &file)
         // https://en.cppreference.com/w/cpp/chrono/duration/duration_cast
         auto start = std::chrono::high_resolution_clock::now();
         auto minPath = solver->run(graph); // RUN
+
+        std::cout << "terminei de rodar o algoritmo" << std::endl;
         auto end = std::chrono::high_resolution_clock::now();
 
         int cost = tourLength(minPath, graph);
+        std::cout << "chego aqui" << std::endl;
 
         long double miliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        
 
+        std::cout << "vou escrever o resultado" << std::endl;
         writeResult(
             file,
             getAlgorithmName(solver),
@@ -247,13 +263,17 @@ int Benchmark::evaluate()
     //     this->mutationRate,
     //     this->crossoverRate
     // );
+
+    HGA* hgaAlgo = new HGA(this->populationSize, 
+    this-> maxEvaluations) ; 
     // algorithms.push_back(ci);
     // algorithms.push_back(mm);
     // algorithms.push_back(gi);
     // algorithms.push_back(nb);
     // algorithms.push_back(ci);
     std::cout << "OI ESTOU PUSHANDO" << std::endl;
-    algorithms.push_back(tabu);
+    // algorithms.push_back(tabu);
+    algorithms.push_back(hgaAlgo);
     // algorithms.push_back(bnb);
     // algorithms.push_back(bf);
     // algorithms.push_back(ag);
@@ -286,14 +306,17 @@ int Benchmark::evaluate()
 
     for (auto generated : generateGraphs(75, 75))
     {
+         std::cout << "b.o aqui" << std::endl;
         graphsPath.push_back(generated);
     }
 
     for (auto generated : generateGraphs(100, 100))
     {
+        std::cout << "ta quiiii" << std::endl;
         graphsPath.push_back(generated);
     }
 
+    std::cout << "sai" << std::endl; 
     for (auto algorithm : algorithms)
     {
         // ignores brute force
@@ -304,11 +327,13 @@ int Benchmark::evaluate()
 
         for (auto g : graphsPath)
         {
+            std::cout << "entrei aqui beleza" << std::endl;
             outputFile.open("result.csv", std::ios::app);
             run(algorithm, g, outputFile);
             outputFile.close();
         }
     }
+    std::cout << "sai de novo" << std::endl; 
 
     return -1;
 }

@@ -145,191 +145,44 @@ void runTabu(int argc, char *argv[]){
     }
 }
 
+void runHga(int argc, char *argv[]){
+
+   int maxEvaluations = std::atoi(argv[1]);
+    int populationSize = std::atoi(argv[2]);
+    float crossoverRate = std::atof(argv[3]);
+    float mutationRate = std::atof(argv[4]);
+
+    // std::string instance = argv[5];
+    // std::string algorithm = argv[6];
+        /*        
+        std::cout << "Running irace over the Genetic Improved algorithm\n"
+                  << "and instance " << instance << std::endl;
+        std::cout << std::endl;
+        std::cout << "Max evaluations: " << maxEvaluations << std::endl;
+        std::cout << "Population size: " << populationSize << std::endl;
+        std::cout << "Crossover rate: " << crossoverRate << std::endl;
+        std::cout << "Mutation rate: " << mutationRate << std::endl;
+        */
+        Benchmark benchmark(
+            maxEvaluations,
+            populationSize,
+            crossoverRate,
+            mutationRate
+        );
+
+        benchmark.evaluate();
+}
+
 int main(int argc, char *argv[])
 {
     // if(isMemetic) runMemetic(argc,argv);
-    // else runTabu(argc,argv);
+    // else 
+    runHga(argc, argv);
+    // runTabu(argc,argv);
 
 
-    Graph graph(5); // Assuming 5 nodes for this example
 
-graph.addEdge(0, 0, 0, 0);
-graph.addEdge(0, 0, 1, 0);
-graph.addEdge(0, 0, 2, 0);
-graph.addEdge(0, 0, 3, 0);
-graph.addEdge(0, 0, 4, 0);
-graph.addEdge(0, 1, 0, 0);
-graph.addEdge(0, 1, 1, 0);
-graph.addEdge(0, 1, 2, 4779);
-graph.addEdge(0, 1, 3, 6711);
-graph.addEdge(0, 1, 4, 5388);
-graph.addEdge(0, 2, 0, 0);
-graph.addEdge(0, 2, 1, 4798);
-graph.addEdge(0, 2, 2, 0);
-graph.addEdge(0, 2, 3, 1091);
-graph.addEdge(0, 2, 4, 5409);
-graph.addEdge(0, 3, 0, 0);
-graph.addEdge(0, 3, 1, 5726);
-graph.addEdge(0, 3, 2, 5876);
-graph.addEdge(0, 3, 3, 0);
-graph.addEdge(0, 3, 4, 4805);
-graph.addEdge(0, 4, 0, 0);
-graph.addEdge(0, 4, 1, 6327);
-graph.addEdge(0, 4, 2, 4961);
-graph.addEdge(0, 4, 3, 6410);
-graph.addEdge(0, 4, 4, 0);
-graph.addEdge(1, 0, 0, 0);
-graph.addEdge(1, 0, 1, 0);
-graph.addEdge(1, 0, 2, 5962);
-graph.addEdge(1, 0, 3, 9527);
-graph.addEdge(1, 0, 4, 7263);
-graph.addEdge(1, 1, 0, 0);
-graph.addEdge(1, 1, 1, 0);
-graph.addEdge(1, 1, 2, 0);
-graph.addEdge(1, 1, 3, 0);
-graph.addEdge(1, 1, 4, 0);
-graph.addEdge(1, 2, 0, 4798);
-graph.addEdge(1, 2, 1, 0);
-graph.addEdge(1, 2, 2, 0);
-graph.addEdge(1, 2, 3, 2097);
-graph.addEdge(1, 2, 4, 6415);
-graph.addEdge(1, 3, 0, 5726);
-graph.addEdge(1, 3, 1, 0);
-graph.addEdge(1, 3, 2, 5249);
-graph.addEdge(1, 3, 3, 0);
-graph.addEdge(1, 3, 4, 4178);
-graph.addEdge(1, 4, 0, 6327);
-graph.addEdge(1, 4, 1, 0);
-graph.addEdge(1, 4, 2, 5275);
-graph.addEdge(1, 4, 3, 6724);
-graph.addEdge(1, 4, 4, 0);
-graph.addEdge(2, 0, 0, 0);
-graph.addEdge(2, 0, 1, 5962);
-graph.addEdge(2, 0, 2, 0);
-graph.addEdge(2, 0, 3, 9369);
-graph.addEdge(2, 0, 4, 7105);
-graph.addEdge(2, 1, 0, 4779);
-graph.addEdge(2, 1, 1, 0);
-graph.addEdge(2, 1, 2, 0);
-graph.addEdge(2, 1, 3, 7736);
-graph.addEdge(2, 1, 4, 6413);
-graph.addEdge(2, 2, 0, 0);
-graph.addEdge(2, 2, 1, 0);
-graph.addEdge(2, 2, 2, 0);
-graph.addEdge(2, 2, 3, 0);
-graph.addEdge(2, 2, 4, 0);
-graph.addEdge(2, 3, 0, 5876);
-graph.addEdge(2, 3, 1, 5249);
-graph.addEdge(2, 3, 2, 0);
-graph.addEdge(2, 3, 3, 0);
-graph.addEdge(2, 3, 4, 253);
-graph.addEdge(2, 4, 0, 4961);
-graph.addEdge(2, 4, 1, 5275);
-graph.addEdge(2, 4, 2, 0);
-graph.addEdge(2, 4, 3, 8440);
-graph.addEdge(2, 4, 4, 0);
-graph.addEdge(3, 0, 0, 0);
-graph.addEdge(3, 0, 1, 9527);
-graph.addEdge(3, 0, 2, 9369);
-graph.addEdge(3, 0, 3, 0);
-graph.addEdge(3, 0, 4, 2523);
-graph.addEdge(3, 1, 0, 6711);
-graph.addEdge(3, 1, 1, 0);
-graph.addEdge(3, 1, 2, 7736);
-graph.addEdge(3, 1, 3, 0);
-graph.addEdge(3, 1, 4, 3776);
-graph.addEdge(3, 2, 0, 1091);
-graph.addEdge(3, 2, 1, 2097);
-graph.addEdge(3, 2, 2, 0);
-graph.addEdge(3, 2, 3, 0);
-graph.addEdge(3, 2, 4, 5642);
-graph.addEdge(3, 3, 0, 0);
-graph.addEdge(3, 3, 1, 0);
-graph.addEdge(3, 3, 2, 0);
-graph.addEdge(3, 3, 3, 0);
-graph.addEdge(3, 3, 4, 0);
-graph.addEdge(3, 4, 0, 6410);
-graph.addEdge(3, 4, 1, 6724);
-graph.addEdge(3, 4, 2, 8440);
-graph.addEdge(3, 4, 3, 0);
-graph.addEdge(3, 4, 4, 0);
-graph.addEdge(4, 0, 0, 0);
-graph.addEdge(4, 0, 1, 7263);
-graph.addEdge(4, 0, 2, 7105);
-graph.addEdge(4, 0, 3, 2523);
-graph.addEdge(4, 0, 4, 0);
-graph.addEdge(4, 1, 0, 5388);
-graph.addEdge(4, 1, 1, 0);
-graph.addEdge(4, 1, 2, 6413);
-graph.addEdge(4, 1, 3, 3776);
-graph.addEdge(4, 1, 4, 0);
-graph.addEdge(4, 2, 0, 5409);
-graph.addEdge(4, 2, 1, 6415);
-graph.addEdge(4, 2, 2, 0);
-graph.addEdge(4, 2, 3, 5642);
-graph.addEdge(4, 2, 4, 0);
-graph.addEdge(4, 3, 0, 4805);
-graph.addEdge(4, 3, 1, 4178);
-graph.addEdge(4, 3, 2, 253);
-graph.addEdge(4, 3, 3, 0);
-graph.addEdge(4, 3, 4, 0);
-graph.addEdge(4, 4, 0, 0);
-graph.addEdge(4, 4, 1, 0);
-graph.addEdge(4, 4, 2, 0);
-graph.addEdge(4, 4, 3, 0);
-graph.addEdge(4, 4, 4, 0);
-
-    HGA hgaAlgo(10, 5);
-    HGA::Individual individuo_teste;
-    HGA::Individual individuo_teste_dois;
-    hgaAlgo.setGraph(graph);
-
-    int heuristic = hgaAlgo.chooseRemovalHeuristic();
-    std::cout<<"A heurística escolhida foi: " << heuristic << std::endl;
-    
-    std::vector<HGA::Individual> population;
-    std::vector<int> solution = hgaAlgo.run(graph);
-
-    std:cout << "A solução final é: " << std::endl;
-
-    for(auto s : solution){
-        std::cout << s << std::endl;
-    }
-
-    std::cout << "O custo é " << std::endl;
-    std::cout << hgaAlgo.cost(solution) << std::endl;
-
-    Memetic memeAlgo(5, 10, 0.9, 0.9);
-    std::vector<int> memesolution = memeAlgo.run(graph);
-
-    std::cout << "A solução meme final é: " << std::endl;
-
-    for(auto s : memesolution){
-        std::cout << s << std::endl;
-    }
-
-    std::cout << "O custo meme é " << std::endl;
-    std::cout << memeAlgo.eval(memesolution, graph) << std::endl;
-    
-    // std::cout<< "A população inicial é: " << std::endl;
-    // for(auto p : hgaAlgo.getPopulation()){
-    //     std::cout << "O custo do indivíduo é: " <<p.cost << std::endl;
-    //     std::cout << "O custo do indivíduo calculado é: " <<hgaAlgo.cost(p.tour) << std::endl;
-    //     std::cout << "A diversidade é: " << hgaAlgo.fd(p) << std::endl; 
-        
-
-    //     std::cout<< "O indivíduo é: " << std::endl;
-    //     for(auto v : p.tour){
-    //         std::cout << v << std::endl; 
-    //     }
-        
-    //     std::cout << "acabou a tour da populacao " << std::endl; 
-    // }
-    // std::cout<< "final da população" << std::endl;
 
     
-
-    // 
-
     return 0;
 }

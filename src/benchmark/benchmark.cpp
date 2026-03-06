@@ -236,12 +236,12 @@ int Benchmark::evaluate()
 //         this->mutationRate
 //     );
 // 
-    //  Memetic *mm = new Memetic(
-    //     this->maxEvaluations,
-    //     this->populationSize,
-    //     this->crossoverRate,
-    //     this->mutationRate
-    // );
+     Memetic *mm = new Memetic(
+        this->maxEvaluations,
+        this->populationSize,
+        this->crossoverRate,
+        this->mutationRate
+    );
 
     // AnotherGenetic *agls = new AnotherGenetic(
     //     this->populationSize,
@@ -267,7 +267,7 @@ int Benchmark::evaluate()
     HGA* hgaAlgo = new HGA(this->populationSize, 
     this-> maxEvaluations) ; 
     // algorithms.push_back(ci);
-    // algorithms.push_back(mm);
+    algorithms.push_back(mm);
     // algorithms.push_back(gi);
     // algorithms.push_back(nb);
     // algorithms.push_back(ci);

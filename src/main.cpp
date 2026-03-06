@@ -177,8 +177,10 @@ int main(int argc, char *argv[])
 {
     // if(isMemetic) runMemetic(argc,argv);
     // else 
-    runHga(argc, argv);
     // runTabu(argc,argv);
+    runMemetic(argc, argv);
+    runHga(argc, argv);
+    // 
 
 
 

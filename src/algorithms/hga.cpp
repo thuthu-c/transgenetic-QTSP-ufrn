@@ -37,7 +37,7 @@ void HGA::setGraph(Graph &graph)
 std::vector<int> HGA::run(Graph& graphInput){
     graph = &graphInput;
     population.clear(); 
-    
+
     std::uniform_real_distribution<double> distribution(0, 1);
     double p_mut = 0.9;
 
@@ -67,7 +67,7 @@ std::vector<int> HGA::run(Graph& graphInput){
         std::pair<int, Individual*> parent1Ptr = selectParent(evaluatedPopulation);
         std::pair<int, Individual*> parent2Ptr = selectParent(evaluatedPopulation);
         
-        // Garante pais diferentes (com limite para não travar)
+        // Garante pais diferentes (com limite para não travar) 
         int tentativas = 0;
         while(parent1Ptr.second == parent2Ptr.second && tentativas < 10) {
             parent2Ptr = selectParent(evaluatedPopulation);

@@ -91,3 +91,8 @@ namespace dynamicProgramming{
         return tour;
     }
 };
+
+int main(){
+
+    
+}

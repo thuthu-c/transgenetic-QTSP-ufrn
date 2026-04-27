@@ -1,8 +1,8 @@
 # Parameter 1: max_evaluations
-max_evaluations " " i (50000, 200000)
+max_evaluations " " i (5, 20)
 
 # Parameter 2: population_size
-population_size " " i (10, 200)
+population_size " " i (50, 200)
 
 # Parameter 3: crossover_rate
 crossover_rate " " r (0.1, 0.9)

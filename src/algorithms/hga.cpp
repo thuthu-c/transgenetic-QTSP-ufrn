@@ -24,7 +24,7 @@ void print_tour(std::vector<int> tour)
     }
 }
 
-HGA::HGA(int populationSize, int itMax) : populationSize(populationSize), graph(nullptr), itMax(itMax)
+HGA::HGA(int populationSize, int itMax, double p_mut) : populationSize(populationSize), graph(nullptr), itMax(itMax), p_mut(p_mut)
 {
     std::random_device rd;
     g = std::mt19937(rd());
@@ -39,7 +39,6 @@ std::vector<int> HGA::run(Graph& graphInput){
     population.clear(); 
 
     std::uniform_real_distribution<double> distribution(0, 1);
-    double p_mut = 0.9;
 
     // 1. Inicializa
     initializePopulation();
@@ -56,18 +55,14 @@ std::vector<int> HGA::run(Graph& graphInput){
         bestGlobalTour = tempEval[0].second->tour;
     }
 
-    // --- LOOP PRINCIPAL ---
     for (int generation = 0; generation < itMax; ++generation) {
-    
-        // [CORREÇÃO 1] Recalcula ponteiros AQUI, no início de cada geração.
-        // Isso garante que selectParent use ponteiros válidos após o erase/push_back da geração anterior.
+
         std::vector<std::pair<int, Individual*>> evaluatedPopulation = evaluatePopulation(population);
 
-        // 3. Seleção
         std::pair<int, Individual*> parent1Ptr = selectParent(evaluatedPopulation);
         std::pair<int, Individual*> parent2Ptr = selectParent(evaluatedPopulation);
         
-        // Garante pais diferentes (com limite para não travar) 
+
         int tentativas = 0;
         while(parent1Ptr.second == parent2Ptr.second && tentativas < 10) {
             parent2Ptr = selectParent(evaluatedPopulation);
@@ -77,14 +72,12 @@ std::vector<int> HGA::run(Graph& graphInput){
         // 4. Crossover
         std::pair<int, Individual*> offspringPair = crossover(parent1Ptr, parent2Ptr);
         
-        // Copia para objeto local seguro
+
         Individual offspringIndi = *(offspringPair.second); 
         delete offspringPair.second; // Limpa heap
 
         // 5. Mutação
         if(distribution(engine) < p_mut){
-            std::cout<<"o que estou mandando pro ruin and recreate" << std::endl;
-            print_tour(offspringIndi.tour);
             ruinAndRecreate(offspringIndi);
         }
 
@@ -96,21 +89,15 @@ std::vector<int> HGA::run(Graph& graphInput){
         offspringIndi.costRank = -1; 
         offspringIndi.diversityRank = -1;
 
-        // [CORREÇÃO 2] Atualização do Melhor Global de forma segura
         if (offspringIndi.cost < bestGlobalCost) {
-            std::cout << "Geracao " << generation << " | Novo melhor: " << offspringIndi.cost << std::endl;
             bestGlobalCost = offspringIndi.cost;
             bestGlobalTour = offspringIndi.tour; // Copia o vetor (seguro)
         }
 
         // 7. Atualização da População
-        // Estratégia simples e segura: Adiciona o filho e remove o pior da lista atual.
         
         population.push_back(offspringIndi);
 
-        // Como adicionamos um, precisamos remover um para manter o tamanho.
-        // O evaluatedPopulation (calculado no inicio) tem a ordem dos piores antigos.
-        // O pior é o último da lista evaluatedPopulation.
         
         Individual* worstPtr = evaluatedPopulation.back().second;
 
@@ -118,12 +105,11 @@ std::vector<int> HGA::run(Graph& graphInput){
         individualCostRank();
         individualDiversityRank();
         
-        // Reavalia para achar o pior ATUAL (incluindo o filho, se ele for muito ruim)
 
         if(populationSize > 40){
             auto currentEval = evaluatePopulation(population);
         
-            // Remove o último (o pior rankeado)
+
             Individual* targetToRemove = currentEval.back().second;
         
             for(auto it = population.begin(); it != population.end(); ++it) {
@@ -135,15 +121,13 @@ std::vector<int> HGA::run(Graph& graphInput){
         }
         
     } 
-    // Fim do Loop
 
-    std::cout << "Fim da execucao. Melhor custo: " << bestGlobalCost << std::endl;
+
     
     if (!bestGlobalTour.empty()) {
-        print_tour(bestGlobalTour); 
         return bestGlobalTour;
     } else {
-        std::cout << "Retornando solucao vazia (erro)." << std::endl;
+
         return std::vector<int>();
     }
 }
@@ -156,7 +140,6 @@ HGA::Individual HGA::createIndividuals()
     // numero de nós do grafo que estamos recebendo
     int n = graph->getMaxM();
 
-    std::cout << "O n é " << n << std::endl;
 
     // criando um individuo
     Individual individual;
@@ -174,47 +157,29 @@ HGA::Individual HGA::createIndividuals()
     for (auto v : vertices)
     {
         solution.push_back(v);
-        std::cout << "VÉRTICE: " << v << std::endl;
     }
 
     individual.tour = solution;
 
-    std::cout << "Solução antes da diversificação" << " " << std::endl;
-
-    for (auto s : solution)
-    {
-        std::cout << s << " " << std::endl;
-    }
     // diversificar
 
-    std::cout << "Vou arruinar e recriar" << " " << std::endl;
     ruinAndRecreate(individual);
 
     auto solution2 = individual.tour;
 
-    std::cout << "Solução depois da diversificação" << " " << std::endl;
-    for (auto s : solution2)
-    {
-        std::cout << s << " " << std::endl;
-    }
 
     // intensificar
 
     individual.tour = lsProcedure(solution2);
 
-    std::cout << "Solução depois da intensificação" << " " << std::endl;
-    for (auto s : individual.tour)
-    {
-        std::cout << s << " " << std::endl;
-    }
+ 
     setIndividualCost(individual);
 
-    std::cout << "custo do individuo: " << individual.cost << std::endl;
+ 
 
     if (individual.tour.size() != n)
     {
-        std::cerr << "[ERRO FATAL] Tentando retornar individuo invalido em createIndividuals!" << std::endl;
-        std::cerr << "Tamanho esperado: " << n << " Tamanho real: " << individual.tour.size() << std::endl;
+
         exit(1);
     }
 
@@ -249,7 +214,6 @@ void HGA::createPopulation()
     for (auto p : population)
     {
         setIndividualDiversityContribution(p);
-        std::cout << "diversidade do individuo: " << p.diversityContribution << std::endl;
     }
 }
 
@@ -264,15 +228,12 @@ long long int HGA::cost(std::vector<int> tour)
 
     for (auto i{0}; i < n - 2; ++i)
     {
-        // std::cout<< "totalCost+= graph->custo[tour[i]][tour[i+1]][tour[i+2]] = " << graph->custo[tour[i]][tour[i+1]][tour[i+2]] << std::endl;
+
         totalCost += graph->custo[tour[i]][tour[i + 1]][tour[i + 2]];
 
-        // std::cout << "tour[i] : " << tour[i] << " tour[i+1] : " << tour[i+1] << " tour[i+2] : " << tour[i+2] << std::endl;
     }
 
-    // std::cout<< "totalCost+= graph->custo[tour[n-2]][tour[n-1]][tour[0]] = " << graph->custo[tour[n-2]][tour[n-1]][tour[0]] << std::endl;
     totalCost += graph->custo[tour[n - 2]][tour[n - 1]][tour[0]];
-    // std::cout<< "totalCost+= graph->custo[tour[n-1]][tour[0]][tour[1]] =  " << graph->custo[tour[n-1]][tour[0]][tour[1]] << std::endl;
     totalCost += graph->custo[tour[n - 1]][tour[0]][tour[1]];
     return totalCost;
 }
@@ -317,7 +278,7 @@ void HGA::individualCostRank()
         setIndividualCost(*individual);
     }
 
-    std::cout << "O problema é aqui claramente" << std::endl;
+
 
     std::sort(copyPopulation.begin(), copyPopulation.end(),
               [](const Individual *a, const Individual *b)
@@ -332,7 +293,7 @@ void HGA::individualCostRank()
         i->costRank = cont++;
     }
 
-    std::cout << "terminei de setar o rank do custo" << std::endl;
+
 }
 
 std::vector<HGA::Individual> &HGA::getPopulation()
@@ -426,8 +387,7 @@ long int HGA::numberOfSuccesivesPairsInATourPiWhichAreNotIncludedInPj(HGA::Indiv
 
 int HGA::biasedFitness(HGA::Individual individual)
 {
-    // Lower values of biasedFitness indicate better fitness.
-    // If negative values are returned, check if this is expected for your problem instance.
+
 
     if (fc(individual) == -1 || fd(individual) == -1)
         return INT_MAX;
@@ -467,7 +427,7 @@ void HGA::initializePopulation()
 int HGA::generateNumberOfVertexToBeRemove(std::vector<int> tour)
 {
     int numero_de_nos = tour.size();
-    std::cout << "qual o número de nós? " << numero_de_nos << " " << std::endl;
+
     int p_min = 1;
     int p_max = std::min(40, numero_de_nos / 3);
 
@@ -475,8 +435,6 @@ int HGA::generateNumberOfVertexToBeRemove(std::vector<int> tour)
     std::uniform_int_distribution<> distrib(p_min, p_max);
 
     int retorno = distrib(gen);
-
-    std::cout << "o retorno é? " << retorno << " " << std::endl;
 
     return retorno;
 }
@@ -486,26 +444,26 @@ std::vector<int> HGA::worstRemovalHeuristic(HGA::Individual indi)
     int custo_total = cost(indi.tour);
     std::vector<std::pair<int, int>> node_costs;
 
-    // 1. Calcular o impacto real de remover cada nó
+
     for (size_t i = 0; i < indi.tour.size(); ++i)
     {
         std::vector<int> temp_tour = indi.tour;
         int v = temp_tour[i];
-        temp_tour.erase(temp_tour.begin() + i); // REMOVE de verdade para testar
+        temp_tour.erase(temp_tour.begin() + i); 
         int custo_sem_v = cost(temp_tour);
 
-        // O "pior" nó é aquele cuja remoção mais reduz o custo (maior diferença)
+
         node_costs.push_back({v, custo_total - custo_sem_v});
     }
 
     int n_to_remove = generateNumberOfVertexToBeRemove(indi.tour);
     std::vector<int> removed_nodes;
 
-    // 2. Usar pesos para selecionar (Garantir que pesos sejam >= 0)
+
     std::vector<double> weights;
     for (auto &p : node_costs)
     {
-        // Garantimos um peso mínimo para evitar erros na distribuição
+
         weights.push_back(std::max(0.1, (double)p.second));
     }
 
@@ -514,10 +472,10 @@ std::vector<int> HGA::worstRemovalHeuristic(HGA::Individual indi)
         std::discrete_distribution<> dist(weights.begin(), weights.end());
         int selected = dist(g);
 
-        // Se o peso for 0, algo deu errado na lógica ou todos são iguais
+
         if (weights[selected] < 0.0001 && i < n_to_remove)
         {
-            // Fallback: seleciona qualquer um que ainda tenha peso > 0
+
             for (size_t j = 0; j < weights.size(); j++)
                 if (weights[j] > 0)
                 {
@@ -528,7 +486,7 @@ std::vector<int> HGA::worstRemovalHeuristic(HGA::Individual indi)
 
         removed_nodes.push_back(node_costs[selected].first);
 
-        // Em vez de while, simplesmente zeramos o peso para a próxima iteração
+
         weights[selected] = 0.0;
     }
 
@@ -569,36 +527,25 @@ std::vector<int> HGA::ruin(Individual &indi)
 
     if (chooseRemovalHeuristic() == HEURISTICS::BLOCK)
     {
-        std::cout << "O problema sou eu???" << " " << std::endl;
+
         vertexToBeRemoved = blockRemovalHeuristic(indi);
-        std::cout << "A heurística rodou legal!!!" << " " << std::endl;
 
         for (auto v : vertexToBeRemoved)
         {
-            std::cout << "o vértice que eu vou remover é o " << v << " " << std::endl;
             indi.tour.erase(std::remove(indi.tour.begin(), indi.tour.end(), v), indi.tour.end());
         }
     }
     else
     {
 
-        std::cout << "Não, o problema sou eu" << " " << std::endl;
+
         vertexToBeRemoved = worstRemovalHeuristic(indi);
-        std::cout << "A heurística rodou legal!!!" << " " << std::endl;
+
         for (auto v : vertexToBeRemoved)
         {
-            std::cout << "o vértice que eu vou remover é o " << v << " " << std::endl;
             indi.tour.erase(std::remove(indi.tour.begin(), indi.tour.end(), v), indi.tour.end());
         }
 
-        std::cout << "tour com os vertices removidos" << std::endl;
-
-        for (auto t : indi.tour)
-        {
-            std::cout << t << " " << std::endl;
-        }
-
-        std::cout << "finalizamos o passei" << std::endl;
     }
 
     return vertexToBeRemoved;
@@ -631,21 +578,15 @@ long long int HGA::calculateInsertionCost(const std::vector<int> &tour, int pos,
 
 void HGA::recreate(Individual &indi, std::vector<int> vertexToBeInserted)
 {
-    std::cout << "Qual é a tour que eu to recebendo??" << std::endl;
-    for (auto s : indi.tour)
-    {
-        std::cout << s << std::endl;
-    }
 
     shuffle_vertex(vertexToBeInserted);
     // indi.tour.clear();
     for (int vertex : vertexToBeInserted)
     {
-        std::cout << "Foi aqui que travou o recreate" << std::endl;
-        // Check for duplicates before insertion
+      
         if (std::find(indi.tour.begin(), indi.tour.end(), vertex) != indi.tour.end())
         {
-            continue; // Skip if vertex already exists in the tour
+            continue;
         }
 
         long long int bestDelta = LLONG_MAX;
@@ -671,18 +612,12 @@ void HGA::recreate(Individual &indi, std::vector<int> vertexToBeInserted)
         indi.tour.insert(indi.tour.begin() + bestPos + 1, vertex);
     }
 
-    std::cout << "A solução depois que eu recriei" << std::endl;
-
-    for (auto t : indi.tour)
-        std::cout << t << std::endl;
 }
 
 void HGA::ruinAndRecreate(Individual &indi)
 {
-    std::cout << "ARRUINANDO" << " " << std::endl;
     std::vector<int> vertex = ruin(indi);
 
-    std::cout << "RECREANDO" << " " << std::endl;
     recreate(indi, vertex);
 }
 
@@ -693,7 +628,7 @@ std::vector<int> HGA::lsProcedure(std::vector<int> current_solution)
 
 std::vector<int> HGA::LocalSearch(std::vector<int> current_solution)
 {
-    // linha 1
+    
     std::vector<int> solution = current_solution;
 
     std::vector<int> V = solution;
@@ -701,7 +636,7 @@ std::vector<int> HGA::LocalSearch(std::vector<int> current_solution)
     std::random_device rd;
     std::mt19937 gen(rd());
 
-    // linha 2
+   
     double p4Opt = 0.1;
     std::uniform_real_distribution<> dis(0.0, 1.0);
     bool use4Opt = (dis(gen) < p4Opt);
@@ -892,10 +827,9 @@ inline int get_safe(const std::vector<int> &tour, int i)
     return tour[((i % n) + n) % n];
 }
 
-// Substitua sua função pred por esta:
+
 int HGA::pred(int pos_u, std::vector<int> tour)
 {
-    // Usa a função segura para pegar o anterior
     return get_safe(tour, pos_u - 1);
 }
 
@@ -1072,11 +1006,9 @@ std::pair<int, HGA::Individual *> HGA::selectParent(
     std::vector<std::pair<int, Individual *>> &populationEvaluated)
 {
 
-    std::cout << "chego aqui viu" << std::endl;
     // 1. PROTEÇÃO DE POPULAÇÃO VAZIA (Causa comum de crash em rand() % size)
     if (populationEvaluated.empty())
     {
-        std::cerr << "ERRO CRÍTICO: A população está vazia em selectParent!" << std::endl;
         // Retorna um par dummy ou encerra para não dar SegFault
         exit(EXIT_FAILURE);
     }
@@ -1098,7 +1030,6 @@ std::pair<int, HGA::Individual *> HGA::selectParent(
         // 2. PROTEÇÃO DE PONTEIRO NULO
         if (populationEvaluated[randIndex].second == nullptr)
         {
-            std::cerr << "ERRO: Ponteiro nulo encontrado na população no índice " << randIndex << std::endl;
             continue;
         }
 
@@ -1122,15 +1053,11 @@ std::pair<int, HGA::Individual *> HGA::selectParent(
         }
     }
 
-    std::cout << "indo embora" << std::endl;
-
     return best;
 }
 
 HGA::Individual *HGA::generateOffspring(std::pair<int, Individual *> &mother, std::pair<int, Individual *> &father)
 {
-
-    std::cout<<"entrei no offspring"<<std::endl;
     int n = mother.second->tour.size();
     std::vector<int> offspring(n, -1);
     std::vector<bool> isInSlice(n + 1000, false); // Ajuste para o valor max das cidades
@@ -1169,7 +1096,6 @@ HGA::Individual *HGA::generateOffspring(std::pair<int, Individual *> &mother, st
     Individual *individual = new Individual();
     individual->tour = offspring;
 
-    std::cout<<"estou indo embora do offspring, beijos"<<std::endl;
     return individual;
 }
 
@@ -1177,15 +1103,10 @@ std::pair<int, HGA::Individual *> HGA::crossover(
     std::pair<int, Individual *> &mother,
     std::pair<int, Individual *> &father)
 {
-
-    std::cout << "bora pro crossover" << std::endl;
-
-    std::cout<<"offspring 1"<<std::endl;
     auto offspring1 = generateOffspring(mother, father);
-    std::cout<<"offspring 2"<<std::endl;
+
     auto offspring2 = generateOffspring(father, mother);
 
-    std::cout << "gerei o offspring" << std::endl;
 
     int offspring1Val = biasedFitness(*offspring1);
     int offspring2Val = biasedFitness(*offspring2);
@@ -1194,8 +1115,6 @@ std::pair<int, HGA::Individual *> HGA::crossover(
     {
         return std::make_pair(offspring1Val, offspring1);
     }
-
-    std::cout << "indo embora do crossover" << std::endl;
 
     return std::make_pair(offspring2Val, offspring2);
 }

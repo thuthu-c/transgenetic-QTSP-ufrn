@@ -172,15 +172,12 @@ std::string getAlgorithmName(TspSolver *solver)
 
 void run(TspSolver *solver, std::string graphFilename, std::ofstream &file)
 {
-    std::cout << "DEBUG 1: Verificando ponteiro solver: " << solver << std::endl;
-    if (solver == nullptr) { std::cout << "ERRO: Solver é nulo!" << std::endl; return; } 
 
 
     std::string solverName = getAlgorithmName(solver);
-    std::cout << "DEBUG 2: Nome do algoritmo: " << solverName << std::endl;
+
 
     GraphIO graphio;
-    std::cout << "DEBUG 3: Tentando ler arquivo: " << graphFilename << std::endl;
     graphio.read(graphFilename);
     Graph graph = graphio.getGraph();
 
@@ -192,16 +189,13 @@ void run(TspSolver *solver, std::string graphFilename, std::ofstream &file)
         auto start = std::chrono::high_resolution_clock::now();
         auto minPath = solver->run(graph); // RUN
 
-        std::cout << "terminei de rodar o algoritmo" << std::endl;
         auto end = std::chrono::high_resolution_clock::now();
 
         int cost = tourLength(minPath, graph);
-        std::cout << "chego aqui" << std::endl;
 
         long double miliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
         
 
-        std::cout << "vou escrever o resultado" << std::endl;
         writeResult(
             file,
             getAlgorithmName(solver),
@@ -265,13 +259,12 @@ int Benchmark::evaluate()
     // );
 
     HGA* hgaAlgo = new HGA(this->populationSize, 
-    this-> maxEvaluations) ; 
+    this-> maxEvaluations, this->crossoverRate); 
     // algorithms.push_back(ci);
     algorithms.push_back(mm);
     // algorithms.push_back(gi);
     // algorithms.push_back(nb);
     // algorithms.push_back(ci);
-    std::cout << "OI ESTOU PUSHANDO" << std::endl;
     // algorithms.push_back(tabu);
     algorithms.push_back(hgaAlgo);
     // algorithms.push_back(bnb);
@@ -302,21 +295,19 @@ int Benchmark::evaluate()
     // running big graphs for big instances (ignoring brute force)
     std::vector<std::string> graphsPath = generateGraphs(50, 50);
 
-    std::cout << "GEREI OS GRAFOS" << std::endl;
 
     for (auto generated : generateGraphs(75, 75))
     {
-         std::cout << "b.o aqui" << std::endl;
+
         graphsPath.push_back(generated);
     }
 
     for (auto generated : generateGraphs(100, 100))
     {
-        std::cout << "ta quiiii" << std::endl;
+
         graphsPath.push_back(generated);
     }
 
-    std::cout << "sai" << std::endl; 
     for (auto algorithm : algorithms)
     {
         // ignores brute force
@@ -327,24 +318,23 @@ int Benchmark::evaluate()
 
         for (auto g : graphsPath)
         {
-            std::cout << "entrei aqui beleza" << std::endl;
             outputFile.open("result.csv", std::ios::app);
             run(algorithm, g, outputFile);
             outputFile.close();
         }
     }
-    std::cout << "sai de novo" << std::endl; 
 
     return -1;
 }
 
 int Benchmark::evaluate(std::string instance, std::string algorithmName)
 {
-    std::cout << "ENTREI AQUI" << std::endl;
+    // std::cout << "ENTREI AQUI" << std::endl;
     TspSolver* algorithm;
 
     if(algorithmName.compare("memetic") == 0) {
-        std::cout << "memetic" << std::endl;
+        // std::cout << "memetic" << std::endl;
+        
         algorithm = new Memetic(
             this->maxEvaluations,
             this->populationSize,
@@ -352,20 +342,28 @@ int Benchmark::evaluate(std::string instance, std::string algorithmName)
             this->mutationRate
         );
     } else if (algorithmName.compare("genetic") == 0){
-        std::cout << "genetic" << std::endl;
+        // std::cout << "genetic" << std::endl;
         algorithm = new GeneticImproved(
             this->maxEvaluations,
             this->populationSize,
             this->crossoverRate,
             this->mutationRate
         );
-    } else {
+    } else if (algorithmName.compare("hga") == 0){
+        // std::cout << "genetic" << std::endl;
+        algorithm = new HGA(
+            this->populationSize, 
+            this-> maxEvaluations,
+            this->crossoverRate
+        );
+    }
+     else {
         algorithm = new Tabu(this->tabuTime,this->tabuAspirationTime,this->tabuMaxIter);
         std::cout << "Criando um tabu" << std::endl;
     }
 
     GraphIO graphio;
-    std::cout << "A INSTÂNCIA É: " <<instance<< std::endl;
+    // std::cout << "A INSTÂNCIA É: " <<instance<< std::endl;
     graphio.read(instance);
     Graph graph = graphio.getGraph();
 

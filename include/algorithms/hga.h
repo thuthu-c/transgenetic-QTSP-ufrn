@@ -23,6 +23,7 @@ class HGA : public TspSolver
     int populationSize; 
     Graph *graph;
     int itMax;
+    double p_mut;
     
     public:
     std::mt19937 g;
@@ -56,7 +57,7 @@ class HGA : public TspSolver
     long long int calculateInsertionCost(const std::vector<int>& tour, int pos, int vertex);
 
     std::vector<int> run(Graph& graph) override;
-    HGA(int populationSize, int itMax);
+    HGA(int populationSize, int itMax, double p_mut);
     ~HGA();
     
     // inicialização população

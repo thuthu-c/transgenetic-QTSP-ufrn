@@ -12,7 +12,7 @@ After compiling (`make clean && make && make test`) there are two ways of execut
 ./bin/exec 50000 100 0.9 0.1
 ```
 
-The second exection is used by Irace to evaluate the genetic improvement algorithm parameters. It uses the following parameters on CLI:
+The second execution is used by Irace to evaluate the genetic improvement algorithm parameters. It uses the following parameters on CLI:
 
 ```
 ./bin/exec <max-evaluations> <population-size> <crossover-rate> <mutation-rate> <instance>

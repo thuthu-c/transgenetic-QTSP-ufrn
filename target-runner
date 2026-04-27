@@ -36,7 +36,7 @@ if [ ! -x "${EXE}" ]; then
 fi
 
 # Now we can call ACOTSP by building a command line with all parameters for it
-$EXE $1 $2 $3 $4 $INSTANCE "memetic" 1> $STDOUT 2> $STDERR
+$EXE $1 $2 $3 $4 $INSTANCE "hga" 1> $STDOUT 2> $STDERR
 
 # The output of the candidate $CONFIG_ID should be written in the file 
 # c${CONFIG_ID}.stdout (see target runner for ACOTSP).

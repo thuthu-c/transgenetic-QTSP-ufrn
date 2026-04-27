@@ -16,6 +16,7 @@
 #include "../../include/algorithms/genetic_improved.h"
 #include "../../include/algorithms/another_genetic.h"
 #include "../../include/algorithms/tabu_memetic.h"
+#include "../../include/algorithms/hga.h"
 
 Benchmark::Benchmark(
     int maxEvaluations,
@@ -137,6 +138,7 @@ void writeResult(
 
 std::string getAlgorithmName(TspSolver *solver)
 {
+
     if (dynamic_cast<BruteForce *>(solver))
     {
         return "BruteForce";
@@ -162,12 +164,18 @@ std::string getAlgorithmName(TspSolver *solver)
         return "Tabu Search Memetic";
 
     }
+    else if(dynamic_cast<HGA*>(solver)){
+        return "HGA";
+    }
     return "AnotherGenetic";
 }
 
 void run(TspSolver *solver, std::string graphFilename, std::ofstream &file)
 {
+
+
     std::string solverName = getAlgorithmName(solver);
+
 
     GraphIO graphio;
     graphio.read(graphFilename);
@@ -180,11 +188,13 @@ void run(TspSolver *solver, std::string graphFilename, std::ofstream &file)
         // https://en.cppreference.com/w/cpp/chrono/duration/duration_cast
         auto start = std::chrono::high_resolution_clock::now();
         auto minPath = solver->run(graph); // RUN
+
         auto end = std::chrono::high_resolution_clock::now();
 
         int cost = tourLength(minPath, graph);
 
         long double miliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        
 
         writeResult(
             file,
@@ -208,7 +218,7 @@ int Benchmark::evaluate()
 {
     std::vector<TspSolver *> algorithms;
 //     BruteForce *bf = new BruteForce();
-//     Tabu* tabu = new Tabu(this->tabuTime,this->tabuAspirationTime,this->tabuMaxIter);
+    Tabu* tabu = new Tabu(this->tabuTime,this->tabuAspirationTime,this->tabuMaxIter);
 //     NearestNeighborhood *nb = new NearestNeighborhood();
 //     CheapestInsertion *ci = new CheapestInsertion();
 //     BranchAndBound *bnb = new BranchAndBound();
@@ -220,12 +230,12 @@ int Benchmark::evaluate()
 //         this->mutationRate
 //     );
 // 
-//     Memetic *mm = new Memetic(
-//         this->maxEvaluations,
-//         this->populationSize,
-//         this->crossoverRate,
-//         this->mutationRate
-//     );
+     Memetic *mm = new Memetic(
+        this->maxEvaluations,
+        this->populationSize,
+        this->crossoverRate,
+        this->mutationRate
+    );
 
     // AnotherGenetic *agls = new AnotherGenetic(
     //     this->populationSize,
@@ -241,23 +251,27 @@ int Benchmark::evaluate()
 //         this->crossoverRate,
 //         false
 //     );
-    TabuMemetic *tm = new TabuMemetic(
-        this->populationSize,
-        this->maxEvaluations,
-        this->mutationRate,
-        this->crossoverRate
-    );
+    // TabuMemetic *tm = new TabuMemetic(
+    //     this->populationSize,
+    //     this->maxEvaluations,
+    //     this->mutationRate,
+    //     this->crossoverRate
+    // );
+
+    HGA* hgaAlgo = new HGA(this->populationSize, 
+    this-> maxEvaluations, this->crossoverRate); 
     // algorithms.push_back(ci);
-    // algorithms.push_back(mm);
+    algorithms.push_back(mm);
     // algorithms.push_back(gi);
     // algorithms.push_back(nb);
     // algorithms.push_back(ci);
     // algorithms.push_back(tabu);
+    algorithms.push_back(hgaAlgo);
     // algorithms.push_back(bnb);
     // algorithms.push_back(bf);
     // algorithms.push_back(ag);
     // algorithms.push_back(agls);
-    algorithms.push_back(tm);
+    // algorithms.push_back(tm);
 
     // std::vector<std::string> graphsPath = generateGraphs(5, 14);
 
@@ -281,13 +295,16 @@ int Benchmark::evaluate()
     // running big graphs for big instances (ignoring brute force)
     std::vector<std::string> graphsPath = generateGraphs(50, 50);
 
+
     for (auto generated : generateGraphs(75, 75))
     {
+
         graphsPath.push_back(generated);
     }
 
     for (auto generated : generateGraphs(100, 100))
     {
+
         graphsPath.push_back(generated);
     }
 
@@ -312,10 +329,12 @@ int Benchmark::evaluate()
 
 int Benchmark::evaluate(std::string instance, std::string algorithmName)
 {
+    // std::cout << "ENTREI AQUI" << std::endl;
     TspSolver* algorithm;
 
     if(algorithmName.compare("memetic") == 0) {
-        std::cout << "memetic" << std::endl;
+        // std::cout << "memetic" << std::endl;
+        
         algorithm = new Memetic(
             this->maxEvaluations,
             this->populationSize,
@@ -323,18 +342,28 @@ int Benchmark::evaluate(std::string instance, std::string algorithmName)
             this->mutationRate
         );
     } else if (algorithmName.compare("genetic") == 0){
-        std::cout << "genetic" << std::endl;
+        // std::cout << "genetic" << std::endl;
         algorithm = new GeneticImproved(
             this->maxEvaluations,
             this->populationSize,
             this->crossoverRate,
             this->mutationRate
         );
-    } else {
+    } else if (algorithmName.compare("hga") == 0){
+        // std::cout << "genetic" << std::endl;
+        algorithm = new HGA(
+            this->populationSize, 
+            this-> maxEvaluations,
+            this->crossoverRate
+        );
+    }
+     else {
         algorithm = new Tabu(this->tabuTime,this->tabuAspirationTime,this->tabuMaxIter);
+        std::cout << "Criando um tabu" << std::endl;
     }
 
     GraphIO graphio;
+    // std::cout << "A INSTÂNCIA É: " <<instance<< std::endl;
     graphio.read(instance);
     Graph graph = graphio.getGraph();
 

@@ -16,7 +16,9 @@ public:
     void addEdge(int v1, int v2, int v3, int weight);
     int * getNeighboor(int v1);
     int getNumEdges();
+    int getNumVertex();
     int getMaxM();
+    /// @brief o custo de i->k->j
     int ***custo;
 };
 

@@ -13,6 +13,7 @@ const long long int uElite = 5;
 std::vector<long int> costsTriples;
 const int gama = 20;
 extern std::mt19937 engine;
+const int itMax = 50000;
 
 typedef std::tuple<int, int, int> triple;
 
@@ -24,7 +25,7 @@ void print_tour(std::vector<int> tour)
     }
 }
 
-HGA::HGA(int populationSize, int itMax, double p_mut) : populationSize(populationSize), graph(nullptr), itMax(itMax), p_mut(p_mut)
+HGA::HGA(int maxEvaluations, int populationSize, float crossoverRate, float p_mut) : populationSize(populationSize), crossoverRate(crossoverRate), graph(nullptr), itMax(itMax), p_mut(p_mut), maxEvaluations(maxEvaluations)
 {
     std::random_device rd;
     g = std::mt19937(rd());
@@ -34,102 +35,368 @@ void HGA::setGraph(Graph &graph)
     this->graph = &graph;
 }
 
-std::vector<int> HGA::run(Graph& graphInput){
+std::vector<HGA::Individual> HGA::initializeRandomPopulation(int populationSize, Graph &graph)
+{
+    std::vector<Individual> population;
+
+    std::uniform_int_distribution<int> distribution(0, (int)graph.getMaxM());
+
+    for (int i = 0; i < populationSize; i++)
+    {
+        Individual currentPopulation;
+
+        std::vector<int> vertexesToBeRandomInserted;
+        for (int j = 0; j < (int)graph.getMaxM(); j++)
+        {
+            vertexesToBeRandomInserted.push_back(j);
+        }
+
+        for (int k = 0; k < (int)graph.getMaxM(); k++)
+        {
+            int randIndex = distribution(engine) % vertexesToBeRandomInserted.size();
+            currentPopulation.tour.push_back(vertexesToBeRandomInserted[randIndex]);
+
+            // https://en.wikipedia.org/wiki/Erase%E2%80%93remove_idiom
+            vertexesToBeRandomInserted.erase(
+                std::remove(
+                    vertexesToBeRandomInserted.begin(),
+                    vertexesToBeRandomInserted.end(),
+                    vertexesToBeRandomInserted[randIndex]),
+                vertexesToBeRandomInserted.end());
+        }
+
+        //currentPopulation.cost = cost(currentPopulation.tour);
+
+        population.push_back(currentPopulation);
+    }
+
+    return population;
+}
+
+// std::vector<int> HGA::getNearestNeighbors(int cityIndex, Graph &graph, int neighborNumber)
+// {
+//     int n = graph.getMaxM();
+//     std::vector<int> result;
+//     std::vector<std::vector<int>> bestResults;
+
+//     std::vector<int> vertexes;
+//     for (int i = 0; i < n; i++)
+//     {
+//         vertexes.push_back(i);
+//     }
+
+//     for (int j = 0; j < n; j++)
+//     {
+//         if (cityIndex != j)
+//         {
+//             std::vector<int> tour;
+//             int v1 = cityIndex;
+//             int v2 = j;
+//             tour.push_back(cityIndex);
+//             tour.push_back(j);
+
+//             // remaining vertexes
+//             std::vector<int> vertexToCheck;
+
+//             std::copy_if(
+//                 vertexes.begin(),
+//                 vertexes.end(),
+//                 std::back_inserter(vertexToCheck),
+//                 [&](int needle)
+//                 {
+//                     return std::find(tour.begin(), tour.end(), needle) == tour.end();
+//                 });
+
+//             std::pair<int, int> nearestNeighbor = std::make_pair(INT_MAX, -1);
+//             for (auto v3 : vertexToCheck)
+//             {
+//                 if (v3 != cityIndex)
+//                 {
+//                     nearestNeighbor = std::min(nearestNeighbor, std::make_pair(graph.custo[v1][v2][v3], v3));
+//                     v1 = v2;
+//                     v2 = v3;
+//                     if (nearestNeighbor.second != cityIndex)
+//                     {
+//                         tour.push_back(nearestNeighbor.second);
+//                     }
+//                 }
+//             }
+
+//             if ((int)bestResults.size() < neighborNumber)
+//             {
+//                 if (cityIndex != tour[1])
+//                 {
+//                     bestResults.push_back(tour);
+//                     result.push_back(tour[1]);
+//                 }
+//             }
+//             else
+//             {
+//                 // calcular onde esse melhor resultado vai ser inserido
+//                 int worstLocalResultIndex = -1;
+//                 int worstLocalResultValue = -1;
+//                 std::vector<int> worstLocalResult;
+//                 for (int k = 0; k < neighborNumber; k++)
+//                 {
+//                     if (k != cityIndex)
+//                     {
+//                         if (worstLocalResult.size() == 0)
+//                         {
+//                             worstLocalResultIndex = k;
+//                             worstLocalResult = bestResults[k];
+//                         }
+//                         else
+//                         {
+//                             int val = this->cost(worstLocalResult);
+//                             if (this->cost(bestResults[k]) < val)
+//                             {
+//                                 worstLocalResult = bestResults[k];
+//                                 worstLocalResultIndex = k;
+//                                 worstLocalResultValue = val;
+//                             }
+//                         }
+//                     }
+//                 }
+
+//                 if (this->cost(tour) < worstLocalResultValue)
+//                 {
+//                     if (result[worstLocalResultIndex] != cityIndex)
+//                     {
+//                         result[worstLocalResultIndex] = j;
+//                         bestResults[worstLocalResultIndex] = tour;
+//                     }
+//                 }
+//             }
+//         }
+//     }
+
+//     return result;
+// }
+
+// std::vector<HGA::Individual> HGA::initializeNearestNeighbors(int populationSize, Graph &graph)
+// {
+//     int cityIndex = 0;
+//     int cityNumber = graph.getMaxM();
+//     std::vector<Individual> population;
+
+//     std::vector<int> vertexes;
+//     for (int i = 0; i < graph.getMaxM(); i++)
+//     {
+//         vertexes.push_back(i);
+//     }
+
+//     // neighborNumber it's fixed to five according to the paper:
+//     // Greedy Permuting Method for Genetic Algorithm on TSP
+//     const int neighborNumber = 5;
+
+//     while (cityIndex < cityNumber)
+//     {
+//         std::vector<int> neighbors = this->getNearestNeighbors(
+//             cityIndex,
+//             graph,
+//             neighborNumber);
+
+//         for (int neighbor : neighbors)
+//         {
+//             std::vector<int> individual = {cityIndex, neighbor};
+//             std::vector<int> permutedCities = this->greedyPermuting(individual, graph, cityNumber);
+//             individual.insert(individual.end(), permutedCities.begin(), permutedCities.end());
+//             population.push_back(individual);
+//         }
+
+//         cityIndex += 1;
+//     }
+
+//     // load remaining population randomly
+//     std::uniform_int_distribution<int> distribution(0, (int)graph.getMaxM());
+
+//     while ((int)population.size() < populationSize)
+//     {
+//         std::vector<int> currentPopulation;
+
+//         std::vector<int> vertexesToBeRandomInserted;
+//         for (int j = 0; j < (int)graph.getMaxM(); j++)
+//         {
+//             vertexesToBeRandomInserted.push_back(j);
+//         }
+
+//         for (int k = 0; k < (int)graph.getMaxM(); k++)
+//         {
+//             int randIndex = distribution(engine) % vertexesToBeRandomInserted.size();
+//             currentPopulation.push_back(vertexesToBeRandomInserted[randIndex]);
+
+//             // https://en.wikipedia.org/wiki/Erase%E2%80%93remove_idiom
+//             vertexesToBeRandomInserted.erase(
+//                 std::remove(
+//                     vertexesToBeRandomInserted.begin(),
+//                     vertexesToBeRandomInserted.end(),
+//                     vertexesToBeRandomInserted[randIndex]),
+//                 vertexesToBeRandomInserted.end());
+//         }
+
+//         population.push_back(currentPopulation);
+//     }
+
+//     // Trim the population to the desired size
+//     if (population.size() > (unsigned long long)populationSize) {
+//         population.erase(population.begin() + populationSize, population.end());
+//     }
+
+//     return population;
+// }
+
+// std::vector<HGA::Individual> HGA::initializePopulation(Graph &graph)
+// {
+//     std::vector<Individual> population(this->populationSize);
+
+//     int randomPopulationSize = (int)(0.5 * this->populationSize);
+
+//     std::vector<std::vector<int>> randomPopulation, cheapestPopulation, nearestPopulation;
+//     randomPopulation = this->initializeRandomPopulation(
+//         randomPopulationSize,
+//         graph);
+
+//     int nearestPopulationSize = this->populationSize - randomPopulationSize;
+//     nearestPopulation = this->initializeNearestNeighbors(
+//         nearestPopulationSize,
+//         graph);
+
+//     for (int i = 0; i < randomPopulationSize; i++)
+//     {
+//         population[i] = randomPopulation[i];
+//     }
+
+//     for (int i = 0; i < nearestPopulationSize; i++)
+//     {
+//         population[i + randomPopulationSize] = nearestPopulation[i];
+//     }
+
+//     return population;
+// }
+
+
+
+
+
+
+
+std::vector<int> HGA::run(Graph& graphInput) {
     graph = &graphInput;
     population.clear(); 
+    numEvaluations = 0;
 
     std::uniform_real_distribution<double> distribution(0, 1);
 
     // 1. Inicializa
     initializePopulation();
 
-    // 2. Variáveis para guardar o Melhor Global (Seguras, sem ponteiros)
+    // 2. Avaliação inicial para setar o bestGlobal
     double bestGlobalCost = std::numeric_limits<double>::max();
     std::vector<int> bestGlobalTour;
 
-    // Inicializa o best global com o melhor da população inicial
-    // Precisamos de uma avaliação inicial rápida para setar o bestGlobal
     std::vector<std::pair<int, Individual*>> tempEval = evaluatePopulation(population);
-    if(!tempEval.empty()){
+    if (!tempEval.empty()) {
         bestGlobalCost = tempEval[0].first;
         bestGlobalTour = tempEval[0].second->tour;
     }
 
-    for (int generation = 0; generation < itMax; ++generation) {
+    int iterationsWithoutImprovement = 0;
+    int itMax = maxEvaluations / 10; // Gatilho de estagnação
 
+    // 3. Loop Principal Único (Cada passagem é uma iteração/geração de 1 filho)
+    while (numEvaluations < maxEvaluations) {
+        
+        // Avalia a população AQUI DENTRO para evitar ponteiros fantasmas
         std::vector<std::pair<int, Individual*>> evaluatedPopulation = evaluatePopulation(population);
 
+        // Seleção
         std::pair<int, Individual*> parent1Ptr = selectParent(evaluatedPopulation);
         std::pair<int, Individual*> parent2Ptr = selectParent(evaluatedPopulation);
         
-
         int tentativas = 0;
-        while(parent1Ptr.second == parent2Ptr.second && tentativas < 10) {
+        while (parent1Ptr.second == parent2Ptr.second && tentativas < 10) {
             parent2Ptr = selectParent(evaluatedPopulation);
             tentativas++;
         }
 
         // 4. Crossover
         std::pair<int, Individual*> offspringPair = crossover(parent1Ptr, parent2Ptr);
-        
-
         Individual offspringIndi = *(offspringPair.second); 
         delete offspringPair.second; // Limpa heap
 
         // 5. Mutação
-        if(distribution(engine) < p_mut){
+        if (distribution(engine) < p_mut) {
             ruinAndRecreate(offspringIndi);
         }
 
         // 6. Busca Local
         offspringIndi.tour = lsProcedure(offspringIndi.tour);
         
-        // Recalcula custo
+        // Recalcula custo (ISSO incrementa numEvaluations)
         offspringIndi.cost = cost(offspringIndi.tour);
-        offspringIndi.costRank = -1; 
-        offspringIndi.diversityRank = -1;
-
+        
+        // Checa melhora global
         if (offspringIndi.cost < bestGlobalCost) {
             bestGlobalCost = offspringIndi.cost;
-            bestGlobalTour = offspringIndi.tour; // Copia o vetor (seguro)
+            bestGlobalTour = offspringIndi.tour; 
+            iterationsWithoutImprovement = 0; // Zera estagnação
+        } else {
+            iterationsWithoutImprovement++; // Incrementa estagnação
         }
 
-        // 7. Atualização da População
-        
+        // 7. Adiciona o novo filho à população
         population.push_back(offspringIndi);
 
-        
-        Individual* worstPtr = evaluatedPopulation.back().second;
-
-   
-        individualCostRank();
-        individualDiversityRank();
-        
-
-        if(populationSize > 40){
+        // 8. Fase de Gerenciamento - Gatilho 1: Tamanho
+        if (population.size() > populationSize) {
+            individualCostRank();
+            individualDiversityRank();
+            
             auto currentEval = evaluatePopulation(population);
+            Individual* targetToRemove = currentEval.back().second; // Pega o pior
         
-
-            Individual* targetToRemove = currentEval.back().second;
-        
-            for(auto it = population.begin(); it != population.end(); ++it) {
-                if ( &(*it) == targetToRemove ) {
-                 population.erase(it);
+            for (auto it = population.begin(); it != population.end(); ++it) {
+                if (&(*it) == targetToRemove) {
+                    population.erase(it);
                     break;
                 }
             }   
         }
-        
-    } 
+ 
 
+        // 9. Fase de Gerenciamento - Gatilho 2: Estagnação
+        if (iterationsWithoutImprovement >= itMax) {
+            
+            individualCostRank();
+            individualDiversityRank();
+            auto currentEval = evaluatePopulation(population);
 
+            int numToKeep = populationSize / 3; // Mantém ~33% melhores
+
+            std::vector<Individual> newPopulation;
+            for (int i = 0; i < numToKeep; i++) {
+                newPopulation.push_back(*(currentEval[i].second));
+            }
+
+            population = newPopulation; // Substitui pela elite
+
+            // Preenche o resto com novos indivíduos (respeitando limite de avaliações)
+            while (population.size() < populationSize && numEvaluations < maxEvaluations) {
+                Individual newIndi;
+                newIndi = createIndividuals(); 
+                newIndi.cost = cost(newIndi.tour); // incrementa numEvaluations
+                population.push_back(newIndi);
+            }
+
+            iterationsWithoutImprovement = 0; // Dá uma nova chance à nova população
+        } 
+    }
     
     if (!bestGlobalTour.empty()) {
         return bestGlobalTour;
     } else {
-
         return std::vector<int>();
-    }
+    } 
 }
 
 HGA::~HGA() {}
@@ -235,6 +502,8 @@ long long int HGA::cost(std::vector<int> tour)
 
     totalCost += graph->custo[tour[n - 2]][tour[n - 1]][tour[0]];
     totalCost += graph->custo[tour[n - 1]][tour[0]][tour[1]];
+
+    numEvaluations++;
     return totalCost;
 }
 
@@ -892,6 +1161,7 @@ std::vector<int> HGA::best4opt(std::vector<int> solution)
             for (int j1 = i2 + 2; j1 <= j2 - 2; ++j1)
             {
                 double current_delta = D2O(i2, j2, solution) + F[i2][j1];
+                numEvaluations++;
 
                 if (current_delta < best_improvement)
                 {

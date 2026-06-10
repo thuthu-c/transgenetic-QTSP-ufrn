@@ -17,6 +17,7 @@
 #include "../../include/algorithms/another_genetic.h"
 #include "../../include/algorithms/tabu_memetic.h"
 #include "../../include/algorithms/hga.h"
+#include "../../include/algorithms/transQTSP.h"
 
 Benchmark::Benchmark(
     int maxEvaluations,
@@ -167,6 +168,9 @@ std::string getAlgorithmName(TspSolver *solver)
     else if(dynamic_cast<HGA*>(solver)){
         return "HGA";
     }
+    else if(dynamic_cast<TransQTSP*>(solver)){
+        return "TransQTSP";
+    }
     return "AnotherGenetic";
 }
 
@@ -258,10 +262,12 @@ int Benchmark::evaluate()
     //     this->crossoverRate
     // );
 
-    HGA* hgaAlgo = new HGA(this->populationSize, 
-    this-> maxEvaluations, this->crossoverRate); 
+    HGA* hgaAlgo = new HGA( 
+    this-> maxEvaluations,this->populationSize, this->crossoverRate, this->mutationRate); 
+
+    TransQTSP* trans = new TransQTSP(this-> maxEvaluations, this->populationSize, this->crossoverRate, this->mutationRate); 
     // algorithms.push_back(ci);
-    algorithms.push_back(mm);
+    // algorithms.push_back(mm);
     // algorithms.push_back(gi);
     // algorithms.push_back(nb);
     // algorithms.push_back(ci);
@@ -272,6 +278,7 @@ int Benchmark::evaluate()
     // algorithms.push_back(ag);
     // algorithms.push_back(agls);
     // algorithms.push_back(tm);
+    // algorithms.push_back(trans);
 
     // std::vector<std::string> graphsPath = generateGraphs(5, 14);
 
@@ -351,11 +358,21 @@ int Benchmark::evaluate(std::string instance, std::string algorithmName)
         );
     } else if (algorithmName.compare("hga") == 0){
         // std::cout << "genetic" << std::endl;
-        algorithm = new HGA(
-            this->populationSize, 
+        algorithm = new HGA( 
             this-> maxEvaluations,
-            this->crossoverRate
+            this->populationSize,
+            this->crossoverRate,
+            this->mutationRate
         );
+    } else if(algorithmName.compare("transQTSP") == 0){
+        // std::cout << "transgenetic" << std::endl;
+        algorithm = new TransQTSP( 
+            this-> maxEvaluations,
+            this->populationSize,
+            this->crossoverRate,
+            this->mutationRate
+        );
+
     }
      else {
         algorithm = new Tabu(this->tabuTime,this->tabuAspirationTime,this->tabuMaxIter);

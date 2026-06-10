@@ -23,7 +23,10 @@ class HGA : public TspSolver
     int populationSize; 
     Graph *graph;
     int itMax;
-    double p_mut;
+    float crossoverRate;
+    float p_mut;
+    int numEvaluations;
+    int maxEvaluations;
     
     public:
     std::mt19937 g;
@@ -57,7 +60,7 @@ class HGA : public TspSolver
     long long int calculateInsertionCost(const std::vector<int>& tour, int pos, int vertex);
 
     std::vector<int> run(Graph& graph) override;
-    HGA(int populationSize, int itMax, double p_mut);
+    HGA(int maxEvaluations, int populationSize, float crossoverRate, float p_mut);
     ~HGA();
     
     // inicialização população
@@ -132,6 +135,12 @@ class HGA : public TspSolver
     void createPopulation();
 
     void initializePopulation();
+
+    std::vector<Individual> initializeRandomPopulation(int populationSize, Graph &graph);
+    std::vector<int> getNearestNeighbors(int cityIndex, Graph &graph, int neighborNumber);
+    std::vector<Individual> initializeNearestNeighbors(int populationSize, Graph &graph);
+    std::vector<Individual> initializePopulation(Graph &graph);
+
     std::vector<std::pair<int, Individual*>> evaluatePopulation(std::vector<HGA::Individual> &population);
 
     //fazer o operador de mutacao para diversidade e intensificacao

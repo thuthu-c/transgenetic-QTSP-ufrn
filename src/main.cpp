@@ -200,13 +200,69 @@ void runHga(int argc, char *argv[]){
     }
 }
 
+void runTransQTSP(int argc, char *argv[]){
+
+     int maxEvaluations = std::atoi(argv[1]);
+    int populationSize = std::atoi(argv[2]);
+    float crossoverRate = std::atof(argv[3]);
+    float mutationRate = std::atof(argv[4]);
+     if(argc == 5) {
+
+        int maxEvaluations = std::atoi(argv[1]);
+        int populationSize = std::atoi(argv[2]);
+        float crossoverRate = std::atof(argv[3]);
+        float mutationRate = std::atof(argv[4]);
+
+        // std::string instance = argv[5];
+        // std::string algorithm = argv[6];
+            /*        
+            std::cout << "Running irace over the Genetic Improved algorithm\n"
+                    << "and instance " << instance << std::endl;
+            std::cout << std::endl;
+            std::cout << "Max evaluations: " << maxEvaluations << std::endl;
+            std::cout << "Population size: " << populationSize << std::endl;
+            std::cout << "Crossover rate: " << crossoverRate << std::endl;
+            std::cout << "Mutation rate: " << mutationRate << std::endl;
+            */
+            Benchmark benchmark(
+                maxEvaluations,
+                populationSize,
+                crossoverRate,
+                mutationRate
+            );
+
+            benchmark.evaluate();
+    } else {
+        std::string instance = argv[5];
+        std::string algorithm = argv[6];
+               
+        // std::cout << "Running irace over the Genetic Improved algorithm\n"
+        //           << "and instance " << instance << std::endl;
+        // std::cout << std::endl;
+        // std::cout << "Max evaluations: " << maxEvaluations << std::endl;
+        // std::cout << "Population size: " << populationSize << std::endl;
+        // std::cout << "Crossover rate: " << crossoverRate << std::endl;
+        // std::cout << "Mutation rate: " << mutationRate << std::endl;
+        
+        Benchmark benchmark(
+            maxEvaluations,
+            populationSize,
+            crossoverRate,
+            mutationRate
+        );
+
+        benchmark.evaluate(instance, algorithm);
+    }
+}
+
 int main(int argc, char *argv[])
 {
     // if(isMemetic) runMemetic(argc,argv);
     // else 
     // runTabu(argc,argv);
-    runMemetic(argc, argv);
+    // runMemetic(argc, argv);
     runHga(argc, argv);
+    // runTransQTSP(argc, argv);
     // 
 
 

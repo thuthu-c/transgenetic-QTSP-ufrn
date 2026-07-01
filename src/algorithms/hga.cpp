@@ -25,6 +25,10 @@ void print_tour(std::vector<int> tour)
     }
 }
 
+
+
+
+
 HGA::HGA(int maxEvaluations, int populationSize, float crossoverRate, float p_mut) : populationSize(populationSize), crossoverRate(crossoverRate), graph(nullptr), itMax(itMax), p_mut(p_mut), maxEvaluations(maxEvaluations)
 {
     std::random_device rd;
@@ -281,6 +285,7 @@ std::vector<HGA::Individual> HGA::initializeRandomPopulation(int populationSize,
 
 
 std::vector<int> HGA::run(Graph& graphInput) {
+    std::cout<<"entrei no run do hga" << std::endl;
     graph = &graphInput;
     population.clear(); 
     numEvaluations = 0;
@@ -337,6 +342,8 @@ std::vector<int> HGA::run(Graph& graphInput) {
         
         // Checa melhora global
         if (offspringIndi.cost < bestGlobalCost) {
+            std::cout<<"o custo do offspring é:  " << offspringIndi.cost << std::endl;
+            std::cout<<"o custo do bestGlobalCost é:  " <<  bestGlobalCost << std::endl;
             bestGlobalCost = offspringIndi.cost;
             bestGlobalTour = offspringIndi.tour; 
             iterationsWithoutImprovement = 0; // Zera estagnação
@@ -349,6 +356,7 @@ std::vector<int> HGA::run(Graph& graphInput) {
 
         // 8. Fase de Gerenciamento - Gatilho 1: Tamanho
         if (population.size() > populationSize) {
+            std::cout<<"entrei no gerenciamento  " << std::endl;
             individualCostRank();
             individualDiversityRank();
             
@@ -579,6 +587,7 @@ void HGA::individualDiversityRank()
     for (auto individual : copyPopulation)
     {
         setIndividualDiversityContribution(*individual);
+        std::cout<<"diversidade do indi HGA " << individual->diversityContribution << std::endl;
     }
 
     std::sort(copyPopulation.begin(), copyPopulation.end(),

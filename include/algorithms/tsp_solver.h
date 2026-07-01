@@ -7,6 +7,8 @@
 class TspSolver
 {
 public:
+    virtual ~TspSolver() {} 
+    
     std::vector<int> b_ini_p;
     int b_ini_c;
     virtual std::vector<int> run(Graph &graph) = 0;

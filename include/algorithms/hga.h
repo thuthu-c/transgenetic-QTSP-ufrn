@@ -16,6 +16,7 @@
 
 class HGA : public TspSolver
 {  
+   
 
     //fazer duas versões: uma com randomização dos vértices 
 
@@ -29,6 +30,7 @@ class HGA : public TspSolver
     int maxEvaluations;
     
     public:
+    HGA() = default;
     std::mt19937 g;
     // cada individuo da população inicial é representado por uma QTSP tour
     struct Individual {

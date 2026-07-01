@@ -6,6 +6,8 @@ using namespace std;
 #include "../include/algorithms/tabu_memetic.h"
 #include "../include/algorithms/memetic.h"
 #include "../include/algorithms/hga.h"
+#include "../include/algorithms/transQTSP.h"
+#include "../include/algorithms/trans_qtsp_v1.h"
 #include <climits>
 #include <string>
 #include <random>
@@ -146,6 +148,7 @@ void runTabu(int argc, char *argv[]){
 }
 
 void runHga(int argc, char *argv[]){
+    std::cout<<"o número de argumentos são: " << argc << std::endl;
 
      int maxEvaluations = std::atoi(argv[1]);
     int populationSize = std::atoi(argv[2]);
@@ -204,14 +207,25 @@ void runTransQTSP(int argc, char *argv[]){
 
      int maxEvaluations = std::atoi(argv[1]);
     int populationSize = std::atoi(argv[2]);
-    float crossoverRate = std::atof(argv[3]);
-    float mutationRate = std::atof(argv[4]);
-     if(argc == 5) {
+    double plasmidSize = std::atof(argv[3]);
+     if(argc == 4) {
 
         int maxEvaluations = std::atoi(argv[1]);
         int populationSize = std::atoi(argv[2]);
-        float crossoverRate = std::atof(argv[3]);
-        float mutationRate = std::atof(argv[4]);
+        double plasmidSize = std::atof(argv[3]);
+
+        Benchmark benchmark(
+            maxEvaluations,
+            populationSize,
+            (double) plasmidSize
+        );
+
+        benchmark.evaluate();
+    } else if(argc == 5) {
+
+        int maxEvaluations = std::atoi(argv[1]);
+        int populationSize = std::atoi(argv[2]);
+        double plasmidSize = std::atof(argv[3]);
 
         // std::string instance = argv[5];
         // std::string algorithm = argv[6];
@@ -227,8 +241,7 @@ void runTransQTSP(int argc, char *argv[]){
             Benchmark benchmark(
                 maxEvaluations,
                 populationSize,
-                crossoverRate,
-                mutationRate
+                (double) plasmidSize
             );
 
             benchmark.evaluate();
@@ -247,13 +260,125 @@ void runTransQTSP(int argc, char *argv[]){
         Benchmark benchmark(
             maxEvaluations,
             populationSize,
-            crossoverRate,
-            mutationRate
+            (double) plasmidSize
         );
 
         benchmark.evaluate(instance, algorithm);
     }
 }
+
+void runTransQTSPProbT(int argc, char *argv[]) {
+    // 1. Verificação Mínima de Segurança
+    if(argc < 5) {
+        std::cout << "Erro! Faltam argumentos.\n";
+        std::cout << "Uso correto: ./bin/exec <maxEvals> <popSize> <probT> <stepProb> [instancia] [algoritmo]\n";
+        return; // Sai da função sem quebrar o C++
+    }
+
+    // 2. Leitura Segura (os 4 primeiros valores garantidamente existem)
+    int maxEvaluations = std::atoi(argv[1]);
+    int populationSize = std::atoi(argv[2]);
+    double probT = std::atof(argv[3]);     // atof para ler decimais!
+    double stepProb = std::atof(argv[4]);  // atof para ler decimais!
+    double plasmidSize = std::atof(argv[5]);
+
+    // 3. Roda o Benchmark completo (Todos os grafos)
+    if(argc == 6) {
+        std::cout << "=> Iniciando Benchmark completo do TransQTSPProbT..." << std::endl;
+        Benchmark benchmark(maxEvaluations, populationSize, (double) probT, (double) stepProb);
+        benchmark.evaluate();
+    } 
+    // 4. Roda apenas em uma Instância específica
+    else if (argc >= 7) {
+        std::string instance = argv[6];
+        std::string algorithm = argv[7];
+        
+        std::cout << "=> Executando TransQTSPProbT na instancia: " << instance << std::endl;
+        Benchmark benchmark(maxEvaluations, populationSize, probT, stepProb, plasmidSize);
+        benchmark.evaluate(instance, algorithm);
+    }
+    // Caso estranho (ex: passou a instância mas esqueceu o nome do algoritmo)
+    else {
+        std::cout << "Erro! Se passar a instância, informe também o algoritmo.\n";
+    }
+}
+
+void runTransQTSPV2(int argc, char *argv[]) {
+    // 1. Verificação Mínima: Agora o executável + 5 parâmetros = 6 no mínimo!
+    if(argc < 6) {
+        std::cout << "Erro! Faltam argumentos.\n";
+        std::cout << "Uso correto: ./bin/exec <maxEvals> <popSize> <probT> <stepProb> <plasmidSize> [instancia] [algoritmo]\n";
+        return; 
+    }
+
+    // 2. Leitura Segura
+    int maxEvaluations = std::atoi(argv[1]);
+    int populationSize = std::atoi(argv[2]);
+    double probT = std::atof(argv[3]);     
+    double stepProb = std::atof(argv[4]);  
+    double plasmidSize = std::atof(argv[5]); // Lemos o novo parâmetro!
+
+    // 3. Roda o Benchmark completo (Passou apenas os 5 números)
+    if(argc == 6) {
+        std::cout << "=> Iniciando Benchmark completo do TransQTSPV2..." << std::endl;
+        
+        // CORREÇÃO: Passando o plasmidSize para não gerar lixo de memória!
+        Benchmark benchmark(maxEvaluations, populationSize, probT, stepProb, plasmidSize);
+        benchmark.evaluate();
+    } 
+    // 4. Roda apenas em uma Instância específica (Passou os números + Instância + Algoritmo = 8 itens)
+    else if (argc >= 8) {
+        // CORREÇÃO: Com o plasmidSize novo, os nomes "pularam" uma casa!
+        std::string instance = argv[6];   
+        std::string algorithm = argv[7];  
+        
+        std::cout << "=> Executando TransQTSPV2 na instancia: " << instance << std::endl;
+        Benchmark benchmark(maxEvaluations, populationSize, probT, stepProb, plasmidSize);
+        benchmark.evaluate(instance, algorithm);
+    }
+    else {
+        std::cout << "Erro! A quantidade de parâmetros passados (" << argc << ") está incorreta.\n";
+    }
+}
+
+
+// void runTransQTSPProbT(int argc, char *argv[]) {
+//     // Valores padrão de segurança
+//     int maxEvaluations = 50000;
+//     int populationSize = 100;
+//     double probT = 0.8;
+//     double stepProb = 0.05;
+//     double plasmidSize = 0.3;
+//     std::string instance = "";
+//     std::string algorithm = "transQTSPProbT";
+
+//     // Leitura das flags (ignora a ordem em que o iRace as envia)
+//     for (int i = 1; i < argc; ++i) {
+//         std::string arg = argv[i];
+//         if (arg == "--maxEvals" && i + 1 < argc) {
+//             maxEvaluations = std::stoi(argv[++i]);
+//         } else if (arg == "--popSize" && i + 1 < argc) {
+//             populationSize = std::stoi(argv[++i]);
+//         } else if (arg == "--probT" && i + 1 < argc) {
+//             probT = std::stod(argv[++i]);
+//         } else if (arg == "--stepProb" && i + 1 < argc) {
+//             stepProb = std::stod(argv[++i]);
+//         } else if (arg == "--plasmidSize" && i + 1 < argc) {
+//             plasmidSize = std::stod(argv[++i]);
+//         } else if (arg == "--instancia" && i + 1 < argc) {
+//             instance = argv[++i];
+//         }
+//     }
+
+//     // NENHUM std::cout AQUI! O iRace quebra se você imprimir texto.
+//     Benchmark benchmark(maxEvaluations, populationSize, probT, stepProb, plasmidSize);
+    
+//     if (instance.empty()) {
+//         benchmark.evaluate();
+//     } else {
+//         benchmark.evaluate(instance, algorithm);
+//     }
+// }
 
 int main(int argc, char *argv[])
 {
@@ -261,13 +386,10 @@ int main(int argc, char *argv[])
     // else 
     // runTabu(argc,argv);
     // runMemetic(argc, argv);
-    runHga(argc, argv);
+    // runHga(argc, argv);
     // runTransQTSP(argc, argv);
-    // 
-
-
-
-
+    // runTransQTSPProbT(argc, argv);
+    runTransQTSPV2(argc, argv);
     
     return 0;
 }

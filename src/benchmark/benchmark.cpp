@@ -18,6 +18,8 @@
 #include "../../include/algorithms/tabu_memetic.h"
 #include "../../include/algorithms/hga.h"
 #include "../../include/algorithms/transQTSP.h"
+#include "../../include/algorithms/trans_qtsp_v1.h"
+#include "../../include/algorithms/trans_qtsp_v2.h"
 
 Benchmark::Benchmark(
     int maxEvaluations,
@@ -42,6 +44,41 @@ Benchmark::Benchmark(
     this->tabuAspirationTime = tabuAspirationTime;
     this->tabuMaxIter = tabuMaxIter;
 }
+
+Benchmark::Benchmark(
+    int maxEvaluations,
+    int populationSize
+)
+{
+    this->maxEvaluations = maxEvaluations;
+    this->populationSize = populationSize;
+}
+
+Benchmark::Benchmark(
+    int maxEvaluations,
+    int populationSize,
+    double plasmidSize
+)
+{
+    this->maxEvaluations = maxEvaluations;
+    this->populationSize = populationSize;
+    this->plasmidSize = plasmidSize;
+
+}
+
+Benchmark::Benchmark(
+            int maxEvaluations,
+            int populationSize,
+            double probT,
+            double stepProb,
+            double plasmidSize
+        ){
+            this->maxEvaluations = maxEvaluations;
+            this->populationSize = populationSize;
+            this->probT = probT;
+            this->stepProb = stepProb;
+            this->plasmidSize = plasmidSize;
+        }
 
 
 Benchmark::~Benchmark(){}
@@ -167,15 +204,23 @@ std::string getAlgorithmName(TspSolver *solver)
     }
     else if(dynamic_cast<HGA*>(solver)){
         return "HGA";
+    } 
+     else if(dynamic_cast<TransQTSPV2*>(solver)){
+        return "TransQTSPV2";
+    }
+    else if(dynamic_cast<TransQTSPProbT*>(solver)){
+        return "TransQTSPProbT";
     }
     else if(dynamic_cast<TransQTSP*>(solver)){
         return "TransQTSP";
     }
+    
     return "AnotherGenetic";
 }
 
 void run(TspSolver *solver, std::string graphFilename, std::ofstream &file)
 {
+
 
 
     std::string solverName = getAlgorithmName(solver);
@@ -265,21 +310,27 @@ int Benchmark::evaluate()
     HGA* hgaAlgo = new HGA( 
     this-> maxEvaluations,this->populationSize, this->crossoverRate, this->mutationRate); 
 
-    TransQTSP* trans = new TransQTSP(this-> maxEvaluations, this->populationSize, this->crossoverRate, this->mutationRate); 
+    TransQTSP* trans = new TransQTSP(this-> maxEvaluations, this->populationSize, this->plasmidSize); 
+    TransQTSPProbT* transV1 = new TransQTSPProbT(this-> maxEvaluations, this->populationSize, this->probT, this->stepProb, this->plasmidSize);
+    TransQTSPV2* transV2 = new TransQTSPV2(this-> maxEvaluations, this->populationSize, this->probT, this->stepProb, this->plasmidSize);
+    std::cout << "criei o transv2" << std::endl;
     // algorithms.push_back(ci);
     // algorithms.push_back(mm);
     // algorithms.push_back(gi);
     // algorithms.push_back(nb);
     // algorithms.push_back(ci);
     // algorithms.push_back(tabu);
-    algorithms.push_back(hgaAlgo);
+    // algorithms.push_back(hgaAlgo);
     // algorithms.push_back(bnb);
     // algorithms.push_back(bf);
     // algorithms.push_back(ag);
     // algorithms.push_back(agls);
     // algorithms.push_back(tm);
     // algorithms.push_back(trans);
-
+    // algorithms.push_back(transV1);
+    algorithms.push_back(transV2);
+    std::cout << "pushei o transv2" << std::endl;
+    //  std::cout<< "eu sou o transv1  " << transV1->getProbT() << std::endl; 
     // std::vector<std::string> graphsPath = generateGraphs(5, 14);
 
     // add header to csv
@@ -317,6 +368,7 @@ int Benchmark::evaluate()
 
     for (auto algorithm : algorithms)
     {
+        // std::cout<< "o algoritmo é " << algorithm << std::endl; 
         // ignores brute force
         if (dynamic_cast<BruteForce *>(algorithm))
         {
@@ -326,6 +378,7 @@ int Benchmark::evaluate()
         for (auto g : graphsPath)
         {
             outputFile.open("result.csv", std::ios::app);
+
             run(algorithm, g, outputFile);
             outputFile.close();
         }
@@ -336,7 +389,7 @@ int Benchmark::evaluate()
 
 int Benchmark::evaluate(std::string instance, std::string algorithmName)
 {
-    // std::cout << "ENTREI AQUI" << std::endl;
+
     TspSolver* algorithm;
 
     if(algorithmName.compare("memetic") == 0) {
@@ -364,13 +417,33 @@ int Benchmark::evaluate(std::string instance, std::string algorithmName)
             this->crossoverRate,
             this->mutationRate
         );
-    } else if(algorithmName.compare("transQTSP") == 0){
+    
+    } else if(algorithmName.compare("transQTSPV2") == 0){
+        // std::cout << "transgenetic" << std::endl;
+        algorithm = new TransQTSPV2( 
+            this-> maxEvaluations,
+            this->populationSize,
+            this->probT,
+            this->stepProb,
+            this->plasmidSize
+        );
+    }
+    else if(algorithmName.compare("transQTSPProbT") == 0){
+        // std::cout << "transgenetic" << std::endl;
+        algorithm = new TransQTSPProbT( 
+            this-> maxEvaluations,
+            this->populationSize,
+            this->probT,
+            this->stepProb,
+            this->plasmidSize
+        );
+    }
+     else if(algorithmName.compare("transQTSP") == 0){
         // std::cout << "transgenetic" << std::endl;
         algorithm = new TransQTSP( 
             this-> maxEvaluations,
             this->populationSize,
-            this->crossoverRate,
-            this->mutationRate
+            this->plasmidSize
         );
 
     }
@@ -387,6 +460,6 @@ int Benchmark::evaluate(std::string instance, std::string algorithmName)
     auto cost = tourLength(algorithm->run(graph), graph);
     // irace `target-runner` expects this output
     std::cout << cost << std::endl;
-
+    delete algorithm; 
     return cost; // RUN
 }

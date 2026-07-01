@@ -20,12 +20,10 @@ public:
     TransQTSP(
         int maxEvaluations,
         int populationSize,
-        float crossoverRate,
-        float mutationRate){
+        double plasmidSize){
         this-> num_evaluations= maxEvaluations;
-        this->populationSize = populationSize,
-        this->crossoverRate = crossoverRate;
-        this->mutationRate = mutationRate;
+        this->populationSize = populationSize;
+        this->plasmidSize = plasmidSize;
         this->numEvaluation = 0;
         this->numBestIndividuals = 50;
         }   
@@ -38,15 +36,16 @@ struct Plasmid {
     std::vector<int> genes; // uma sequencia de cidades, gerada a partir de algum cromossomo do GIR
     double fitness_gain;    // quanto do custo que se reduz com a transcrição do plasmídeo
     }; 
+    
+long long int cost(const std::vector<int>& tour);
 
 protected: 
     Graph *graph;
     int numEvaluation;
     int populationSize;
+    double plasmidSize;
     int num_evaluations;
     int numBestIndividuals;
-    float crossoverRate;
-    float mutationRate;
 
     
     
@@ -73,9 +72,9 @@ protected:
     std::vector<int> getVertex();
 
 
-    long long int cost(const std::vector<int>& tour);
-    std::vector<int> m1 (const Plasmid &p, int tamanho_solucao);
-    Plasmid generate_plasmid(std::vector<std::vector<int>>  gir);
+    
+    std::vector<int> m1 (const Plasmid &p, int tamanho_solucao, const std::vector<int> &solution);
+    Plasmid generate_plasmid(std::vector<std::vector<int>>  &gir);
     std::vector<int> best4opt(const std::vector<int>& cromossome);
     long long int D2O(int i, int j, const std::vector<int>& tour);
     std::vector<int> fourOptMove(int i1, int i2, int j1, int j2, const std::vector<int>& tour);

@@ -7,12 +7,12 @@
 #include <unordered_set>
 #include <string>
 #include <vector>
+#include "../../include/helpers/random.h"
 
 const int gir_size = 100;
-extern std::random_device rd;
-extern std::mt19937 engine;
 
 std::vector<int> TransQTSP::run(Graph& graphInput){
+    this->numEvaluation = 0;
     graph = &graphInput;
     int vertex_q = graph->getNumVertex();
 
@@ -33,8 +33,9 @@ std::vector<int> TransQTSP::run(Graph& graphInput){
             if(rand() % 2){
                 Plasmid plasmid;
                 plasmid = generate_plasmid(gir);
-                if(cost(p) < plasmid.fitness_gain){
-                    p = plasmid.genes;
+                std::vector<int> new_solution = m1(plasmid, p.size(), p); 
+                if(cost(p) < cost(new_solution)){
+                    p = new_solution;
                     gir.emplace_back(p);
                 }
             }else{
@@ -91,7 +92,7 @@ void TransQTSP::generate_population_random(Graph *graph){
         std::vector<int> solution;
         std::shuffle(vertices.begin(), vertices.end(), g);
         solution.reserve(n);
-        solution = vertices; // Cópia direta é mais eficiente
+        solution = vertices; 
         population.push_back(solution);
     }
 }
@@ -437,43 +438,87 @@ std::vector<int> TransQTSP::getVertex()
 // a informação genética vem de uma solução da população?
 
 
-TransQTSP::Plasmid TransQTSP::generate_plasmid(std::vector<std::vector<int>>  gir){
+TransQTSP::Plasmid TransQTSP::generate_plasmid(std::vector<std::vector<int>>& gir) {
     TransQTSP::Plasmid plasmid;
     int gir_size = gir.size();
-    if (gir_size == 0) return plasmid; // Proteção contra GIR vazio
     
-    auto num = rand() % gir_size;
-    plasmid.genes = gir[num];
-    auto custo_inicial = cost(plasmid.genes);
-    int tamanho_solucao = plasmid.genes.size();
+    if (gir_size == 0) return plasmid;
+    
+    int source_index = 0;
 
-    plasmid.genes = this->m1(plasmid, tamanho_solucao);
-    auto custo_final = cost(plasmid.genes);
-    plasmid.fitness_gain = custo_final - custo_inicial;
+    if (gir_size < 3) {
+        std::uniform_int_distribution<int> dist_gir(0, gir_size - 1);
+        source_index = dist_gir(engine);
+    } else {
+
+        std::vector<std::pair<int, long long int>> custos_gir;
+        custos_gir.reserve(gir_size);
+        for (int i = 0; i < gir_size; ++i) {
+            custos_gir.push_back({i, cost(gir[i])});
+        }
+        std::sort(custos_gir.begin(), custos_gir.end(), 
+            [](const std::pair<int, long long int>& a, const std::pair<int, long long int>& b) {
+                return a.second < b.second;
+            });
+
+        std::vector<std::pair<int, long long int>> crowding_distances; 
+        
+        for (int i = 1; i < gir_size - 1; ++i) {
+            long long int distance = custos_gir[i + 1].second - custos_gir[i - 1].second;
+            crowding_distances.push_back({custos_gir[i].first, distance});
+        }
+
+        std::sort(crowding_distances.begin(), crowding_distances.end(),
+            [](const std::pair<int, long long int>& a, const std::pair<int, long long int>& b) {
+                return a.second > b.second; 
+            });
+
+        int top_k = std::max(1, static_cast<int>(0.1 * crowding_distances.size()));
+        std::uniform_int_distribution<int> dist_top(0, top_k - 1);
+        
+        source_index = crowding_distances[dist_top(engine)].first;
+    }
+
+    const std::vector<int>& endossimbionte = gir[source_index];
+    int n_vertices = endossimbionte.size();
+    
+    if (n_vertices == 0) return plasmid;
+
+    int pl = std::max(1, static_cast<int>(plasmidSize * n_vertices));
+
+    std::uniform_int_distribution<int> dist_start(0, n_vertices - 1);
+    int start_idx = dist_start(engine);
+
+    plasmid.genes.reserve(pl);
+    for (int i = 0; i < pl; ++i) {
+        plasmid.genes.push_back(endossimbionte[(start_idx + i) % n_vertices]);
+    }
+
+    plasmid.fitness_gain = 0;
+
     return plasmid;
 }
-// o metodo de manipulação m1, vai construir um ciclo hamiltoniano vazio inserindo o seu dna (seus vértices)
-// e o resto será de maneira aleatória de um p da População
-std::vector<int> TransQTSP::m1 (const Plasmid &p, int tamanho_solucao){
-    std::vector<int> ciclo_hamiltoniano;
-    ciclo_hamiltoniano.reserve(tamanho_solucao);
-    ciclo_hamiltoniano = p.genes;
 
-    // Usar unordered_set para O(1) lookup ao invés de O(n) com std::find
-    std::unordered_set<int> used(ciclo_hamiltoniano.begin(), ciclo_hamiltoniano.end());
+std::vector<int> TransQTSP::m1(const Plasmid &p, int tamanho_solucao, const std::vector<int>& solution) {
+    std::vector<int> novo_ciclo;
+    novo_ciclo.reserve(tamanho_solucao);
+
+    if (p.genes.empty()) return solution; 
+
+    int primeiro_gene = p.genes[0];
     
-    std::vector<int> vertices = getVertex();
-    std::shuffle(vertices.begin(), vertices.end(), g);
+    std::unordered_set<int> plasmid_genes(p.genes.begin(), p.genes.end());
 
-    for(auto v : vertices){
-        if(used.find(v) == used.end()){
-            ciclo_hamiltoniano.push_back(v);
-            used.insert(v);
-            if(ciclo_hamiltoniano.size() >= (size_t)tamanho_solucao) break;
+    for (int v : solution) {
+        if (v == primeiro_gene) {
+            novo_ciclo.insert(novo_ciclo.end(), p.genes.begin(), p.genes.end());
+        } 
+        else if (plasmid_genes.find(v) == plasmid_genes.end()) {
+            novo_ciclo.push_back(v);
         }
     }
 
-    return ciclo_hamiltoniano;
+    return novo_ciclo;
 }
 
 

@@ -1,4 +1,4 @@
-#include "../../include/algorithms/transQTSP.h"
+#include "../../include/algorithms/trans_qtsp.h"
 #include <numeric>
 #include <iostream>
 #include <random>
@@ -437,8 +437,14 @@ std::vector<int> TransQTSP::getVertex()
 // plasmideo um pedaço de informação genética e um método de manipulação
 // a informação genética vem de uma solução da população?
 
+// gerando o plasmideo usando o crowding_distances()
+// The genetic information of simple plasmids comes
+// from a solution (source) of the external archive. The solution is chosen at random in
+// the least crowded region of the objective space deﬁned by the points correspondent
+// to the solutions of the archive.
 
 TransQTSP::Plasmid TransQTSP::generate_plasmid(std::vector<std::vector<int>>& gir) {
+    // std::cout<< "oi to gerando um plasmideo" << std::endl;
     TransQTSP::Plasmid plasmid;
     int gir_size = gir.size();
     
@@ -496,20 +502,27 @@ TransQTSP::Plasmid TransQTSP::generate_plasmid(std::vector<std::vector<int>>& gi
 
     plasmid.fitness_gain = 0;
 
+    // std::cout<< "o tamanho do plasmideo eh pra ser: " << plasmidSize << " mas na realidade eh " << plasmid.genes.size() << std:: endl;
     return plasmid;
 }
 
 std::vector<int> TransQTSP::m1(const Plasmid &p, int tamanho_solucao, const std::vector<int>& solution) {
+
+    // std::cout<< "solucao antes da transcricao: " << std::endl;
+    // for(auto s : solution) std::cout << s << " ";
+    // std::cout<< std::endl;
     std::vector<int> novo_ciclo;
     novo_ciclo.reserve(tamanho_solucao);
 
     if (p.genes.empty()) return solution; 
 
     int primeiro_gene = p.genes[0];
+    // std::cout << "o primeiro gene do plasmideo eh " << primeiro_gene << std::endl; 
     
     std::unordered_set<int> plasmid_genes(p.genes.begin(), p.genes.end());
 
     for (int v : solution) {
+        // std::cout<<"o vertice atual eh " << v << std::endl;
         if (v == primeiro_gene) {
             novo_ciclo.insert(novo_ciclo.end(), p.genes.begin(), p.genes.end());
         } 
@@ -517,6 +530,10 @@ std::vector<int> TransQTSP::m1(const Plasmid &p, int tamanho_solucao, const std:
             novo_ciclo.push_back(v);
         }
     }
+
+    // std::cout<< "solucao depois da transcricao: " << std::endl;
+    // for(auto n : novo_ciclo) std::cout << n << " ";
+    // std::cout<< std::endl;  
 
     return novo_ciclo;
 }

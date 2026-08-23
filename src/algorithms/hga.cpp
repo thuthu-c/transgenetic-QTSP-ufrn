@@ -762,7 +762,7 @@ std::vector<int> HGA::worstRemovalHeuristic(HGA::Individual indi)
                 }
         }
 
-        removed_nodes.push_back(node_costs[selected].first);
+        removed_nodes.push_back(node_costs[selected].first);  
 
 
         weights[selected] = 0.0;
@@ -774,6 +774,7 @@ std::vector<int> HGA::worstRemovalHeuristic(HGA::Individual indi)
 std::vector<int> HGA::blockRemovalHeuristic(Individual indi)
 {
     int numero_de_vertices_para_remover = generateNumberOfVertexToBeRemove(indi.tour);
+
     std::vector<int> removed_nodes;
 
     std::uniform_int_distribution<> distrib(0, indi.tour.size() - 1);

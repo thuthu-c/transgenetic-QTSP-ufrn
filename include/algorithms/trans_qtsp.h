@@ -78,7 +78,7 @@ protected:
     std::vector<int> best4opt(const std::vector<int>& cromossome);
     long long int D2O(int i, int j, const std::vector<int>& tour);
     std::vector<int> fourOptMove(int i1, int i2, int j1, int j2, const std::vector<int>& tour);
-    std::vector<int> transposon_4OPT(const std::vector<int>& individual);
+    virtual std::vector<int> transposon_4OPT(const std::vector<int>& individual);
 
 };
 #endif

@@ -1,7 +1,7 @@
 #ifndef _TRANSQTSPV1_H_
 #define _TRANSQTSPV1_H_
 
-#include "../algorithms/transQTSP.h"
+#include "../algorithms/trans_qtsp.h"
 
 class TransQTSPProbT : public TransQTSP 
 {

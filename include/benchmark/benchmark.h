@@ -52,6 +52,17 @@ public:
             double stepProb,
             double plasmidSize
         );
+
+    Benchmark(
+    int maxEvaluations,
+    int populationSize,
+    float crossoverRate,
+    float mutationRate,
+    double probT,
+    double stepProb,
+    double plasmidSize
+    );
+    
     ~Benchmark();
     int evaluate();
     int evaluate(std::string instance, std::string algorithm);

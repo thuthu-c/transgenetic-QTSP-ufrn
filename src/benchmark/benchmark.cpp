@@ -17,9 +17,10 @@
 #include "../../include/algorithms/another_genetic.h"
 #include "../../include/algorithms/tabu_memetic.h"
 #include "../../include/algorithms/hga.h"
-#include "../../include/algorithms/transQTSP.h"
+#include "../../include/algorithms/trans_qtsp.h"
 #include "../../include/algorithms/trans_qtsp_v1.h"
 #include "../../include/algorithms/trans_qtsp_v2.h"
+#include "../../include/algorithms/trans_qtsp_v3.h"
 
 Benchmark::Benchmark(
     int maxEvaluations,
@@ -79,6 +80,24 @@ Benchmark::Benchmark(
             this->stepProb = stepProb;
             this->plasmidSize = plasmidSize;
         }
+
+Benchmark::Benchmark(
+    int maxEvaluations,
+    int populationSize,
+    float crossoverRate,
+    float mutationRate,
+    double probT,
+    double stepProb,
+    double plasmidSize
+) {
+    this->maxEvaluations = maxEvaluations;
+    this->populationSize = populationSize;
+    this->crossoverRate = crossoverRate;
+    this->mutationRate = mutationRate;
+    this->probT = probT;
+    this->stepProb = stepProb;
+    this->plasmidSize = plasmidSize;
+}
 
 
 Benchmark::~Benchmark(){}
@@ -204,7 +223,10 @@ std::string getAlgorithmName(TspSolver *solver)
     }
     else if(dynamic_cast<HGA*>(solver)){
         return "HGA";
-    } 
+    }
+     else if(dynamic_cast<RemTransp*>(solver)){
+        return "RemTransp";
+    }
      else if(dynamic_cast<TransQTSPV2*>(solver)){
         return "TransQTSPV2";
     }
@@ -313,7 +335,7 @@ int Benchmark::evaluate()
     TransQTSP* trans = new TransQTSP(this-> maxEvaluations, this->populationSize, this->plasmidSize); 
     TransQTSPProbT* transV1 = new TransQTSPProbT(this-> maxEvaluations, this->populationSize, this->probT, this->stepProb, this->plasmidSize);
     TransQTSPV2* transV2 = new TransQTSPV2(this-> maxEvaluations, this->populationSize, this->probT, this->stepProb, this->plasmidSize);
-    std::cout << "criei o transv2" << std::endl;
+    RemTransp* remTransp = new RemTransp(this-> maxEvaluations, this->populationSize, this->probT, this->stepProb, this->plasmidSize);
     // algorithms.push_back(ci);
     // algorithms.push_back(mm);
     // algorithms.push_back(gi);
@@ -328,8 +350,8 @@ int Benchmark::evaluate()
     // algorithms.push_back(tm);
     // algorithms.push_back(trans);
     // algorithms.push_back(transV1);
-    algorithms.push_back(transV2);
-    std::cout << "pushei o transv2" << std::endl;
+    // algorithms.push_back(transV2);
+    algorithms.push_back(remTransp);
     //  std::cout<< "eu sou o transv1  " << transV1->getProbT() << std::endl; 
     // std::vector<std::string> graphsPath = generateGraphs(5, 14);
 
@@ -393,7 +415,7 @@ int Benchmark::evaluate(std::string instance, std::string algorithmName)
     TspSolver* algorithm;
 
     if(algorithmName.compare("memetic") == 0) {
-        // std::cout << "memetic" << std::endl;
+        std::cout << "memetic" << std::endl;
         
         algorithm = new Memetic(
             this->maxEvaluations,
@@ -410,7 +432,7 @@ int Benchmark::evaluate(std::string instance, std::string algorithmName)
             this->mutationRate
         );
     } else if (algorithmName.compare("hga") == 0){
-        // std::cout << "genetic" << std::endl;
+        std::cout << "hga" << std::endl;
         algorithm = new HGA( 
             this-> maxEvaluations,
             this->populationSize,
@@ -418,8 +440,18 @@ int Benchmark::evaluate(std::string instance, std::string algorithmName)
             this->mutationRate
         );
     
-    } else if(algorithmName.compare("transQTSPV2") == 0){
-        // std::cout << "transgenetic" << std::endl;
+    }else if(algorithmName.compare("remTransp") == 0){
+        std::cout << "remTransp" << std::endl;
+        algorithm = new RemTransp( 
+            this-> maxEvaluations,
+            this->populationSize,
+            this->probT,
+            this->stepProb,
+            this->plasmidSize
+        );
+    }
+     else if(algorithmName.compare("transQTSPV2") == 0){
+        std::cout << "transgeneticv2" << std::endl;
         algorithm = new TransQTSPV2( 
             this-> maxEvaluations,
             this->populationSize,
@@ -429,7 +461,7 @@ int Benchmark::evaluate(std::string instance, std::string algorithmName)
         );
     }
     else if(algorithmName.compare("transQTSPProbT") == 0){
-        // std::cout << "transgenetic" << std::endl;
+        std::cout << "transgenetic probT" << std::endl;
         algorithm = new TransQTSPProbT( 
             this-> maxEvaluations,
             this->populationSize,
@@ -439,7 +471,7 @@ int Benchmark::evaluate(std::string instance, std::string algorithmName)
         );
     }
      else if(algorithmName.compare("transQTSP") == 0){
-        // std::cout << "transgenetic" << std::endl;
+        std::cout << "transgenetic" << std::endl;
         algorithm = new TransQTSP( 
             this-> maxEvaluations,
             this->populationSize,

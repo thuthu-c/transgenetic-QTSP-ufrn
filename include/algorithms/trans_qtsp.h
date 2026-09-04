@@ -26,6 +26,7 @@ public:
         this->plasmidSize = plasmidSize;
         this->numEvaluation = 0;
         this->numBestIndividuals = 50;
+        this->gir_size  = 100;
         }   
 
 ~TransQTSP()
@@ -46,6 +47,8 @@ protected:
     double plasmidSize;
     int num_evaluations;
     int numBestIndividuals;
+
+    int gir_size;    
 
     
     
@@ -74,7 +77,7 @@ protected:
 
     
     std::vector<int> m1 (const Plasmid &p, int tamanho_solucao, const std::vector<int> &solution);
-    Plasmid generate_plasmid(std::vector<std::vector<int>>  &gir);
+    Plasmid generate_plasmid(std::vector<std::vector<int>>  &gir, double plasmidSize);
     std::vector<int> best4opt(const std::vector<int>& cromossome);
     long long int D2O(int i, int j, const std::vector<int>& tour);
     std::vector<int> fourOptMove(int i1, int i2, int j1, int j2, const std::vector<int>& tour);

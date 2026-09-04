@@ -78,7 +78,7 @@ std::vector<int> TransQTSPProbT::run(Graph& graphInput){
 
             if(chance <= probP){
                 Plasmid plasmid;
-                plasmid = generate_plasmid(gir);
+                plasmid = generate_plasmid(gir, plasmidSize);
                 std::vector<int> new_solution = m1(plasmid, p.size(), p); 
 
                 long long int new_cost = cost(new_solution); 

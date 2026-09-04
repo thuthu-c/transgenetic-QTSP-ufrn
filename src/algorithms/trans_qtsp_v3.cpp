@@ -1,5 +1,4 @@
 #include "../../include/algorithms/trans_qtsp_v3.h"
-#include "../../include/algorithms/cheapest_insertion.h"
 #include "../../include/algorithms/hga.h"
 #include <numeric>
 #include <iostream>
@@ -13,8 +12,8 @@
 #include "../../include/helpers/random.h"
 
 
-RemTransp::RemTransp(int maxEvaluations, int populationSize, double probT, double stepProb, double plasmidSize) 
-    : TransQTSPV2(maxEvaluations, populationSize, probT, stepProb, plasmidSize) 
+RemTransp::RemTransp(int maxEvaluations, int populationSize, double probT, double stepProb, double plasmidSize, int plasmidBank) 
+    : TransQTSPV2(maxEvaluations, populationSize, probT, stepProb, plasmidSize, plasmidBank)
 {
     this->num_evaluations = maxEvaluations;
     this->populationSize = populationSize; 
@@ -22,6 +21,7 @@ RemTransp::RemTransp(int maxEvaluations, int populationSize, double probT, doubl
     this->stepProb = stepProb;
     this->plasmidSize = plasmidSize;
     this->numEvaluation = 0;
+    this->plasmidBank=plasmidBank;
 }
 
 
@@ -61,11 +61,49 @@ std::vector<int> RemTransp::transposon_4OPT(const std::vector<int>& tour){
     // for(auto r : solution_recreated ) std::cout<< r << " ";
     // std::cout<<std::endl;
     
+    int tam_transposon_distribution = hga.generateNumberOfVertexToBeRemove(solution_recreated);
+    int tam_solution = solution_recreated.size();
+    std::uniform_int_distribution<int> distribution(0, tam_solution);
+    
+
+    int rand_index = distribution(engine) % tam_solution; 
+
+    std::vector<int> solution_to_4opt;
+
+    for(auto i{0}; i < tam_transposon_distribution; ++i){
+        solution_to_4opt.push_back(solution_recreated[(rand_index+i)%tam_solution]);
+    }
+
+
+
 
 
     // manda a solucao para o transposon4opt
 
-    return best4opt(solution_recreated);
+    std::vector<int> transposon = best4opt(solution_to_4opt);
+
+    // transcreve o transposon
+    std::vector<int> novo_ciclo;
+    novo_ciclo.reserve(tam_solution);
+
+    if (transposon.empty()) return solution_recreated; 
+
+    int primeiro_gene = transposon[0]; 
+    
+    std::unordered_set<int> transposon_cromossomos(transposon.begin(), transposon.end());
+
+    for (int v : solution_recreated) {
+        if (v == primeiro_gene) {
+            novo_ciclo.insert(novo_ciclo.end(), transposon.begin(), transposon.end());
+        } 
+        else if (transposon_cromossomos.find(v) == transposon_cromossomos.end()) {
+            novo_ciclo.push_back(v);
+        }
+    }
+
+
+
+    return novo_ciclo;
 
 }
 int RemTransp::eval(std::vector<int> &tour, Graph &graph)

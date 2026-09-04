@@ -4,7 +4,7 @@ CC = g++
 CPPFLAGS = -O3 -gdwarf-3 -W -Wall -pedantic -std=c++17
 MAIN = main.o
 
-OBJS = graph.o graph_generator.o nearest_neighborhood.o cheapest_insertion.o brute_force.o benchmark.o graphio.o memetic.o branch_and_bound.o tabu.o genetic_improved.o random.o tabu_memetic.o hga.o trans_qtsp.o  trans_qtsp_v1.o trans_qtsp_v2.o trans_qtsp_v3.o
+OBJS = graph.o graph_generator.o nearest_neighborhood.o cheapest_insertion.o brute_force.o benchmark.o graphio.o memetic.o branch_and_bound.o tabu.o genetic_improved.o random.o tabu_memetic.o hga.o trans_qtsp.o  trans_qtsp_v1.o trans_qtsp_v2.o trans_qtsp_v3.o trans_qtsp_v4.o
 TESTOBJECTS = test_base.o test_graph.o test_graph_generator.o test_nearest_neighborhood.o test_brute_force.o test_benchmark.o test_graphio.o test_cheapest_insertion.o test_memetic.o
 
 main: $(MAIN) $(OBJS)
@@ -98,6 +98,9 @@ trans_qtsp_v2.o: include/algorithms/trans_qtsp_v2.h
 
 trans_qtsp_v3.o: include/algorithms/trans_qtsp_v3.h
 	$(CC) $(CPPFLAGS) -c src/algorithms/trans_qtsp_v3.cpp
+
+trans_qtsp_v4.o: include/algorithms/trans_qtsp_v4.h
+	$(CC) $(CPPFLAGS) -c src/algorithms/trans_qtsp_v4.cpp
 
 clean:
 	rm -f ./bin/exec

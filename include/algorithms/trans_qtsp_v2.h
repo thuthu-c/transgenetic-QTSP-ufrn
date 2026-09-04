@@ -16,8 +16,11 @@ struct Individual {
 class TransQTSPV2 : public TransQTSPProbT 
 {
 public: 
-    TransQTSPV2(int maxEvaluations, int populationSize, double probT, double stepProb, double plasmidSize);
+    TransQTSPV2(int maxEvaluations, int populationSize, double probT, double stepProb, double plasmidSize, int plasmidBankSize);
     ~TransQTSPV2() = default;
+
+    int plasmidBankSize{10};
+    double uElite;
 
     std::vector<int> run(Graph& graphInput) override;
 
@@ -29,6 +32,8 @@ protected:
     double normalizeBronkenPairsDistance(Individual Pi, Individual Pj);
     double dc(Individual& Pi);
     void individualDiversityRank();
+    void individualCostRank(std::vector<Individual>& population);
+    void evaluatePopulation(std::vector<Individual>& population);
     std::vector<Individual> population;
 };
 

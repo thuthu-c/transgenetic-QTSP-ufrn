@@ -9,7 +9,6 @@
 #include <vector>
 #include "../../include/helpers/random.h"
 
-const int gir_size = 100;
 
 std::vector<int> TransQTSP::run(Graph& graphInput){
     this->numEvaluation = 0;
@@ -32,7 +31,7 @@ std::vector<int> TransQTSP::run(Graph& graphInput){
         for(auto p: population){
             if(rand() % 2){
                 Plasmid plasmid;
-                plasmid = generate_plasmid(gir);
+                plasmid = generate_plasmid(gir, plasmidSize);
                 std::vector<int> new_solution = m1(plasmid, p.size(), p); 
                 if(cost(p) < cost(new_solution)){
                     p = new_solution;
@@ -443,7 +442,7 @@ std::vector<int> TransQTSP::getVertex()
 // the least crowded region of the objective space deﬁned by the points correspondent
 // to the solutions of the archive.
 
-TransQTSP::Plasmid TransQTSP::generate_plasmid(std::vector<std::vector<int>>& gir) {
+TransQTSP::Plasmid TransQTSP::generate_plasmid(std::vector<std::vector<int>>& gir, double plasmidSize) {
     // std::cout<< "oi to gerando um plasmideo" << std::endl;
     TransQTSP::Plasmid plasmid;
     int gir_size = gir.size();

@@ -8,8 +8,9 @@
 class  RemTransp: public TransQTSPV2
 {
 public: 
-     RemTransp(int maxEvaluations, int populationSize, double probT, double stepProb, double plasmidSize);
+     RemTransp(int maxEvaluations, int populationSize, double probT, double stepProb, double plasmidSize, int plasmidBank);
     ~RemTransp() = default;
+    int plasmidBank;
     
     std::vector<int> transposon_4OPT(const std::vector<int>& tour) override;
     int eval(std::vector<int> &tour, Graph &graph);

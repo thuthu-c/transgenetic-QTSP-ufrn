@@ -20,6 +20,8 @@ private:
     double probT;
     double stepProb;
     double plasmidSize;
+    int plasmidBank;
+    double plasmidMin, plasmidMax;
 public: 
 
     Benchmark(
@@ -61,6 +63,48 @@ public:
     double probT,
     double stepProb,
     double plasmidSize
+    );
+
+     Benchmark(
+    int maxEvaluations,
+    int populationSize,
+    float crossoverRate,
+    float mutationRate,
+    double probT,
+    double stepProb,
+    double plasmidSize,
+    int plasmidBank
+    );
+
+     Benchmark(
+            int maxEvaluations,
+            int populationSize,
+            double probT,
+            double stepProb,
+            double plasmidSize,
+            int plasmidBank
+        );
+    Benchmark(
+            int maxEvaluations,
+            int populationSize,
+            double probT,
+            double stepProb,
+            double plasmidSize,
+            int plasmidBank, 
+            double plasmidMin,
+            double plasmidMax
+        );
+
+        Benchmark(
+    int maxEvaluations,
+    int populationSize,
+    float crossoverRate,
+    float mutationRate,
+    double probT,
+    double stepProb,
+    double plasmidSize,
+    double plasmidMin,
+    double plasmidMax
     );
     
     ~Benchmark();

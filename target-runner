@@ -1,44 +1,89 @@
+# #!/bin/bash
+# error() {
+#     echo "`TZ=UTC date`: $0: error: $@" >&2
+#     exit 1
+# }
+
+# EXE="./bin/exec"
+# CONFIG_ID="$1"
+# INSTANCE_ID="$2"
+# SEED="$3"
+# INSTANCE="$4"
+
+# # Remove os 4 primeiros argumentos (id, instancia_id, seed, nome_instancia)
+# shift 4 || error "Not enough parameters"
+
+# # O que sobra são as flags (--maxEvals 15 --probT 0.8 ...)
+# CONFIG_PARAMS=$*
+
+# STDOUT=c${CONFIG_ID}-${INSTANCE_ID}-${SEED}.stdout
+# STDERR=c${CONFIG_ID}-${INSTANCE_ID}-${SEED}.stderr
+
+# if [ ! -x "${EXE}" ]; then
+#     error "${EXE}: not found or not executable (pwd: $(pwd))"
+# fi
+
+# # Executa o C++ com valores fixos + as flags do iRace
+# $EXE --instancia $INSTANCE --maxEvals 50000 --popSize 100 $CONFIG_PARAMS 1> $STDOUT 2> $STDERR
+
+# if [ ! -s "${STDOUT}" ]; then
+#     error "${STDOUT}: No such file or directory"
+# fi
+
+# # Captura apenas os números
+# COST=$(cat ${STDOUT} | tr -d ' \n\r')
+
+# if ! [[ "$COST" =~ ^[-+0-9.e]+$ ]] ; then
+#     error "${STDOUT}: Output is not a number. Output was: '$COST'"
+# fi
+
+# echo "$COST"
+
+# rm -f "${STDOUT}" "${STDERR}"
+# rm -f best.* stat.* cmp.*
+# exit 0
+
 #!/bin/bash
-error() {
-    echo "`TZ=UTC date`: $0: error: $@" >&2
-    exit 1
-}
 
+# Caminho para o seu executavel
 EXE="./bin/exec"
-CONFIG_ID="$1"
-INSTANCE_ID="$2"
-SEED="$3"
-INSTANCE="$4"
 
-# Remove os 4 primeiros argumentos (id, instancia_id, seed, nome_instancia)
-shift 4 || error "Not enough parameters"
+# O irace passa os seguintes argumentos padrão inicialmente:
+# 1: id da configuracao | 2: id da instancia | 3: seed | 4: caminho da instancia | 5: limite de tempo
+CONFIG_ID=$1
+INSTANCE_ID=$2
+SEED=$3
+INSTANCE=$4
+shift 5 # Pula os 5 primeiros argumentos para ler as flags customizadas
 
-# O que sobra são as flags (--maxEvals 15 --probT 0.8 ...)
-CONFIG_PARAMS=$*
+# Valores padroes caso algo falhe
+MAX_EVALS=50000
+POP_SIZE=100
+PROB_T=0.9
+STEP_PROB=0.01
+PLASMID_SIZE=0.2
+PLASMID_BANK=10
+PLASMID_MIN=0.1
+PLASMID_MAX=0.4
+# Faz o parse das flags definidas no parameters.txt
+while [ "$1" != "" ]; do
+    case $1 in
+        --maxEvals ) shift; MAX_EVALS=$1 ;;
+        --popSize ) shift; POP_SIZE=$1 ;;
+        --probT ) shift; PROB_T=$1 ;;
+        --stepProb ) shift; STEP_PROB=$1 ;;
+        --plasmidSize ) shift; PLASMID_SIZE=$1 ;;
+        --plasmidBank ) shift; PLASMID_BANK=$1 ;;
+        --plasmidMin ) shift; PLASMID_MIN=$1 ;;
+        --plasmidMax ) shift; PLASMID_MAX=$1 ;;
+        
 
-STDOUT=c${CONFIG_ID}-${INSTANCE_ID}-${SEED}.stdout
-STDERR=c${CONFIG_ID}-${INSTANCE_ID}-${SEED}.stderr
+    esac
+    shift
+done
 
-if [ ! -x "${EXE}" ]; then
-    error "${EXE}: not found or not executable (pwd: $(pwd))"
-fi
+ALGORITHM="transV4"
 
-# Executa o C++ com valores fixos + as flags do iRace
-$EXE --instancia $INSTANCE --maxEvals 50000 --popSize 100 $CONFIG_PARAMS 1> $STDOUT 2> $STDERR
-
-if [ ! -s "${STDOUT}" ]; then
-    error "${STDOUT}: No such file or directory"
-fi
-
-# Captura apenas os números
-COST=$(cat ${STDOUT} | tr -d ' \n\r')
-
-if ! [[ "$COST" =~ ^[-+0-9.e]+$ ]] ; then
-    error "${STDOUT}: Output is not a number. Output was: '$COST'"
-fi
-
-echo "$COST"
-
-rm -f "${STDOUT}" "${STDERR}"
-rm -f best.* stat.* cmp.*
-exit 0
+# Executa o seu C++ na exata ordem que o argc/argv espera (9 argumentos no total)
+# 1.maxEvals 2.popSize 3.probT 4.stepProb 5.plasmidSize 6.plasmidBank 7.plasmidMin 8. plasmidMax 9.instancia 10.algoritmo
+$EXE $MAX_EVALS $POP_SIZE $PROB_T $STEP_PROB $PLASMID_SIZE $PLASMID_BANK $PLASMID_MIN $PLASMID_MAX $INSTANCE $ALGORITHM

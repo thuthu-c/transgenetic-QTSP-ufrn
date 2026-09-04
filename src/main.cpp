@@ -147,61 +147,7 @@
 //     }
 // }
 
-// void runHga(int argc, char *argv[]){
-//     std::cout<<"o número de argumentos são: " << argc << std::endl;
 
-//      int maxEvaluations = std::atoi(argv[1]);
-//     int populationSize = std::atoi(argv[2]);
-//     float crossoverRate = std::atof(argv[3]);
-//     float mutationRate = std::atof(argv[4]);
-//      if(argc == 5) {
-
-//         int maxEvaluations = std::atoi(argv[1]);
-//         int populationSize = std::atoi(argv[2]);
-//         float crossoverRate = std::atof(argv[3]);
-//         float mutationRate = std::atof(argv[4]);
-
-//         // std::string instance = argv[5];
-//         // std::string algorithm = argv[6];
-//             /*        
-//             std::cout << "Running irace over the Genetic Improved algorithm\n"
-//                     << "and instance " << instance << std::endl;
-//             std::cout << std::endl;
-//             std::cout << "Max evaluations: " << maxEvaluations << std::endl;
-//             std::cout << "Population size: " << populationSize << std::endl;
-//             std::cout << "Crossover rate: " << crossoverRate << std::endl;
-//             std::cout << "Mutation rate: " << mutationRate << std::endl;
-//             */
-//             Benchmark benchmark(
-//                 maxEvaluations,
-//                 populationSize,
-//                 crossoverRate,
-//                 mutationRate
-//             );
-
-//             benchmark.evaluate();
-//     } else {
-//         std::string instance = argv[5];
-//         std::string algorithm = argv[6];
-               
-//         // std::cout << "Running irace over the Genetic Improved algorithm\n"
-//         //           << "and instance " << instance << std::endl;
-//         // std::cout << std::endl;
-//         // std::cout << "Max evaluations: " << maxEvaluations << std::endl;
-//         // std::cout << "Population size: " << populationSize << std::endl;
-//         // std::cout << "Crossover rate: " << crossoverRate << std::endl;
-//         // std::cout << "Mutation rate: " << mutationRate << std::endl;
-        
-//         Benchmark benchmark(
-//             maxEvaluations,
-//             populationSize,
-//             crossoverRate,
-//             mutationRate
-//         );
-
-//         benchmark.evaluate(instance, algorithm);
-//     }
-// }
 
 // // void runTransQTSP(int argc, char *argv[]){
 
@@ -454,6 +400,62 @@
 #include <string>
 #include <cstdlib>
 
+void runHga(int argc, char *argv[]){
+    // std::cout<<"o número de argumentos são: " << argc << std::endl;
+
+     int maxEvaluations = std::atoi(argv[1]);
+    int populationSize = std::atoi(argv[2]);
+    float crossoverRate = std::atof(argv[3]);
+    float mutationRate = std::atof(argv[4]);
+     if(argc == 5) {
+
+        int maxEvaluations = std::atoi(argv[1]);
+        int populationSize = std::atoi(argv[2]);
+        float crossoverRate = std::atof(argv[3]);
+        float mutationRate = std::atof(argv[4]);
+
+        // std::string instance = argv[5];
+        // std::string algorithm = argv[6];
+            /*        
+            std::cout << "Running irace over the Genetic Improved algorithm\n"
+                    << "and instance " << instance << std::endl;
+            std::cout << std::endl;
+            std::cout << "Max evaluations: " << maxEvaluations << std::endl;
+            std::cout << "Population size: " << populationSize << std::endl;
+            std::cout << "Crossover rate: " << crossoverRate << std::endl;
+            std::cout << "Mutation rate: " << mutationRate << std::endl;
+            */
+            Benchmark benchmark(
+                maxEvaluations,
+                populationSize,
+                crossoverRate,
+                mutationRate
+            );
+
+            benchmark.evaluate();
+    } else {
+        std::string instance = argv[5];
+        std::string algorithm = argv[6];
+               
+        // std::cout << "Running irace over the Genetic Improved algorithm\n"
+        //           << "and instance " << instance << std::endl;
+        // std::cout << std::endl;
+        // std::cout << "Max evaluations: " << maxEvaluations << std::endl;
+        // std::cout << "Population size: " << populationSize << std::endl;
+        // std::cout << "Crossover rate: " << crossoverRate << std::endl;
+        // std::cout << "Mutation rate: " << mutationRate << std::endl;
+        
+        Benchmark benchmark(
+            maxEvaluations,
+            populationSize,
+            crossoverRate,
+            mutationRate
+        );
+
+        benchmark.evaluate(instance, algorithm);
+    }
+}
+
 void runAllAlgorithms(int argc, char *argv[]) {
     // 1. Verifica se temos todos os 7 parâmetros numéricos
     if (argc < 8) {
@@ -468,12 +470,14 @@ void runAllAlgorithms(int argc, char *argv[]) {
     double probT = std::atof(argv[5]);
     double stepProb = std::atof(argv[6]);
     double plasmidSize = std::atof(argv[7]);
+    double plasmidMin = std::atof(argv[8]);
+    double plasmidMax = std::atof(argv[9]);
 
     // 2. Cria o Benchmark com TUDO inicializado perfeitamente!
-    Benchmark benchmark(maxEvaluations, populationSize, crossoverRate, mutationRate, probT, stepProb, plasmidSize);
+    Benchmark benchmark(maxEvaluations, populationSize, crossoverRate, mutationRate, probT, stepProb, plasmidSize, plasmidMin, plasmidMax);
 
     // 3. Roda o benchmark completo (Gera grafos e salva no CSV)
-    if (argc == 8) {
+    if (argc == 10) {
         std::cout << "=> Iniciando Benchmark Completo para TODOS os algoritmos..." << std::endl;
         benchmark.evaluate();
     } 
@@ -485,10 +489,40 @@ void runAllAlgorithms(int argc, char *argv[]) {
     }
 }
 
-void runTransQTSPV2(int argc, char *argv[]) {
-    if(argc < 6) {
+// void runTransQTSPV2(int argc, char *argv[]) {
+//     if(argc < 6) {
+//         std::cout << "Erro! Faltam argumentos.\n";
+//         std::cout << "Uso correto: ./bin/exec <maxEvals> <popSize> <probT> <stepProb> <plasmidSize> [instancia] [algoritmo]\n";
+//         return; 
+//     }
+
+//     int maxEvaluations = std::atoi(argv[1]);
+//     int populationSize = std::atoi(argv[2]);
+//     double probT = std::atof(argv[3]);     
+//     double stepProb = std::atof(argv[4]);  
+//     double plasmidSize = std::atof(argv[5]); 
+
+//     if(argc == 6) {
+//         std::cout << "\n======================================================\n";
+//         std::cout << "=> Iniciando Benchmark completo do TransQTSPV2..." << std::endl;
+//         Benchmark benchmark(maxEvaluations, populationSize, probT, stepProb, plasmidSize);
+//         benchmark.evaluate();
+//     } 
+//     else if (argc >= 8) {
+//         std::string instance = argv[6];   
+//         std::string algorithm = argv[7];  
+        
+//         std::cout << "\n======================================================\n";
+//         std::cout << "=> Executando TransQTSPV2 na instancia: " << instance << std::endl;
+//         Benchmark benchmark(maxEvaluations, populationSize, probT, stepProb, plasmidSize);
+//         benchmark.evaluate(instance, algorithm);
+//     }
+// }
+
+void runRemTransp(int argc, char *argv[]) {
+    if(argc < 7) {
         std::cout << "Erro! Faltam argumentos.\n";
-        std::cout << "Uso correto: ./bin/exec <maxEvals> <popSize> <probT> <stepProb> <plasmidSize> [instancia] [algoritmo]\n";
+        std::cout << "Uso correto: ./bin/exec <maxEvals> <popSize> <probT> <stepProb> <plasmidSize> <plasmidBank>[instancia] [algoritmo]\n";
         return; 
     }
 
@@ -497,28 +531,68 @@ void runTransQTSPV2(int argc, char *argv[]) {
     double probT = std::atof(argv[3]);     
     double stepProb = std::atof(argv[4]);  
     double plasmidSize = std::atof(argv[5]); 
+    int plasmidBank = std::atoi(argv[6]); 
 
-    if(argc == 6) {
+    if(argc == 7) {
         std::cout << "\n======================================================\n";
-        std::cout << "=> Iniciando Benchmark completo do TransQTSPV2..." << std::endl;
-        Benchmark benchmark(maxEvaluations, populationSize, probT, stepProb, plasmidSize);
+        std::cout << "=> Iniciando Benchmark completo do RemTransp..." << std::endl;
+        Benchmark benchmark(maxEvaluations, populationSize, probT, stepProb, plasmidSize, plasmidBank);
         benchmark.evaluate();
     } 
-    else if (argc >= 8) {
-        std::string instance = argv[6];   
-        std::string algorithm = argv[7];  
+    else if (argc >= 9) {
+        std::string instance = argv[7];   
+        std::string algorithm = argv[8];  
         
         std::cout << "\n======================================================\n";
-        std::cout << "=> Executando TransQTSPV2 na instancia: " << instance << std::endl;
-        Benchmark benchmark(maxEvaluations, populationSize, probT, stepProb, plasmidSize);
+        std::cout << "=> Executando RemTransp na instancia: " << instance << std::endl;
+        Benchmark benchmark(maxEvaluations, populationSize, probT, stepProb, plasmidSize, plasmidBank);
         benchmark.evaluate(instance, algorithm);
     }
 }
 
-void runRemTransp(int argc, char *argv[]) {
-    if(argc < 6) {
+
+//irace
+
+// void runRemTransp(int argc, char *argv[]) {
+//     if(argc < 7) {
+//         std::cout << "Erro! Faltam argumentos.\n";
+//         return; 
+//     }
+
+//     int maxEvaluations = std::atoi(argv[1]);
+//     int populationSize = std::atoi(argv[2]);
+//     double probT = std::atof(argv[3]);     
+//     double stepProb = std::atof(argv[4]);  
+//     double plasmidSize = std::atof(argv[5]); 
+//     int plasmidBank = std::atoi(argv[6]); 
+
+//     if(argc == 7) {
+//         // Benchmark completo - pode deixar os prints
+//         std::cout << "\n======================================================\n";
+//         std::cout << "=> Iniciando Benchmark completo do RemTransp..." << std::endl;
+//         Benchmark benchmark(maxEvaluations, populationSize, probT, stepProb, plasmidSize, plasmidBank);
+//         benchmark.evaluate();
+//     } 
+//     else if (argc >= 9) {
+//         std::string instance = argv[7];   
+//         std::string algorithm = argv[8];  
+        
+//         // COMENTE OU REMOVA ESTES PRINTS PARA O IRACE NÃO QUEBRAR!
+//         // std::cout << "\n======================================================\n";
+//         // std::cout << "=> Executando RemTransp na instancia: " << instance << std::endl;
+        
+//         Benchmark benchmark(maxEvaluations, populationSize, probT, stepProb, plasmidSize, plasmidBank);
+//         benchmark.evaluate(instance, algorithm);
+        
+//         // CERTIFIQUE-SE que dentro de `benchmark.evaluate()` o código imprima 
+//         // APENAS o número correspondente ao fitness/custo final da rota (ex: 25440).
+//     }
+// }
+
+void runTransQTSPV4(int argc, char *argv[]) {
+    if(argc < 9) {
         std::cout << "Erro! Faltam argumentos.\n";
-        std::cout << "Uso correto: ./bin/exec <maxEvals> <popSize> <probT> <stepProb> <plasmidSize> [instancia] [algoritmo]\n";
+        std::cout << "Uso correto: ./bin/exec <maxEvals> <popSize> <probT> <stepProb> <plasmidSize> <plasmidBank> [instancia] [algoritmo]\n";
         return; 
     }
 
@@ -527,29 +601,71 @@ void runRemTransp(int argc, char *argv[]) {
     double probT = std::atof(argv[3]);     
     double stepProb = std::atof(argv[4]);  
     double plasmidSize = std::atof(argv[5]); 
+    int plasmidBank = std::atoi(argv[6]); 
+     double plasmidMin = std::atof(argv[7]);
+    double plasmidMax = std::atof(argv[8]);
 
-    if(argc == 6) {
+    if(argc == 9) {
         std::cout << "\n======================================================\n";
-        std::cout << "=> Iniciando Benchmark completo do RemTransp..." << std::endl;
-        Benchmark benchmark(maxEvaluations, populationSize, probT, stepProb, plasmidSize);
+        std::cout << "=> Iniciando Benchmark completo do TransQtspV4..." << std::endl;
+        Benchmark benchmark(maxEvaluations, populationSize, probT, stepProb, plasmidSize, plasmidBank, plasmidMin, plasmidMax);
         benchmark.evaluate();
     } 
-    else if (argc >= 8) {
-        std::string instance = argv[6];   
-        std::string algorithm = argv[7];  
-        
+    else if (argc >= 9) {
+     std::string instance = argv[9];   
+        std::string algorithm = argv[10];  
         std::cout << "\n======================================================\n";
-        std::cout << "=> Executando RemTransp na instancia: " << instance << std::endl;
-        Benchmark benchmark(maxEvaluations, populationSize, probT, stepProb, plasmidSize);
+        std::cout << "=> Executando TransQtspV4 na instancia: " << instance << std::endl;
+        Benchmark benchmark(maxEvaluations, populationSize, probT, stepProb, plasmidSize, plasmidBank, plasmidMin, plasmidMax);
         benchmark.evaluate(instance, algorithm);
+    }
+}
+
+void runTransQTSPV4irace(int argc, char *argv[]) {
+    if(argc < 9) {
+        std::cout << "Erro! Faltam argumentos.\n";
+        return; 
+    }
+
+    int maxEvaluations = std::atoi(argv[1]);
+    int populationSize = std::atoi(argv[2]);
+    double probT = std::atof(argv[3]);     
+    double stepProb = std::atof(argv[4]);  
+    double plasmidSize = std::atof(argv[5]); 
+    int plasmidBank = std::atoi(argv[6]);
+    double plasmidMin = std::atof(argv[7]);
+    double plasmidMax = std::atof(argv[8]);
+
+    if(argc == 9) {
+        // Benchmark completo - pode deixar os prints
+        std::cout << "\n======================================================\n";
+        std::cout << "=> Iniciando Benchmark completo do TransQTSPV4..." << std::endl;
+        Benchmark benchmark(maxEvaluations, populationSize, probT, stepProb, plasmidSize, plasmidBank, plasmidMin, plasmidMax);
+        benchmark.evaluate();
+    } 
+    else if (argc >= 9) {
+        std::string instance = argv[9];   
+        std::string algorithm = argv[10];  
+        
+        // COMENTE OU REMOVA ESTES PRINTS PARA O IRACE NÃO QUEBRAR!
+        // std::cout << "\n======================================================\n";
+        // std::cout << "=> Executando RemTransp na instancia: " << instance << std::endl;
+        
+        Benchmark benchmark(maxEvaluations, populationSize, probT, stepProb, plasmidSize, plasmidBank, plasmidMin, plasmidMax);
+        benchmark.evaluate(instance, algorithm);
+        
+        // CERTIFIQUE-SE que dentro de `benchmark.evaluate()` o código imprima 
+        // APENAS o número correspondente ao fitness/custo final da rota (ex: 25440).
     }
 }
 
 int main(int argc, char *argv[])
 {
-    // runAllAlgorithms(argc, argv);
+    runAllAlgorithms(argc, argv);
     // runTransQTSPV2(argc, argv);
-    runRemTransp(argc, argv);
+    // runRemTransp(argc, argv);
+    // runTransQTSPV4(argc, argv);
+    // runTransQTSPV4irace(argc, argv); 
     return 0;
 }
 

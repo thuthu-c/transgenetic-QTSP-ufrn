@@ -26,8 +26,19 @@ class HGA : public TspSolver
     int itMax;
     float crossoverRate;
     float p_mut;
+    float p_4opt;
     int numEvaluations;
     int maxEvaluations;
+    int uElite;
+    int n_close;
+    int p_min;
+    int p_max;
+    int gama;
+    int mi;
+    int lambda;
+    int It_div;
+     
+
     
     public:
     HGA() = default;
@@ -63,6 +74,7 @@ class HGA : public TspSolver
 
     std::vector<int> run(Graph& graph) override;
     HGA(int maxEvaluations, int populationSize, float crossoverRate, float p_mut);
+    HGA(float p_mut, int iT_max, int u_elite, int n_close, int p_min, int p_max, int gama, float p_4opt, int mi, int lambda, int It_div);
     ~HGA();
     
     // inicialização população

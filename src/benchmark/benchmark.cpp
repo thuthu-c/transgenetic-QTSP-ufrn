@@ -16,12 +16,10 @@
 #include "../../include/algorithms/genetic_improved.h"
 #include "../../include/algorithms/another_genetic.h"
 #include "../../include/algorithms/tabu_memetic.h"
-#include "../../include/algorithms/hga.h"
-#include "../../include/algorithms/trans_qtsp.h"
-#include "../../include/algorithms/trans_qtsp_v1.h"
-#include "../../include/algorithms/trans_qtsp_v2.h"
-#include "../../include/algorithms/trans_qtsp_v3.h"
-#include "../../include/algorithms/trans_qtsp_v4.h"
+#include "../../include/algorithms/rcl.h"
+
+
+Benchmark::Benchmark(){};
 
 Benchmark::Benchmark(
     int maxEvaluations,
@@ -233,13 +231,13 @@ int tourLength(std::vector<int> tour, Graph graph)
     return tourVal;
 }
 
-bool verificaGir (TransQTSPV4 *solver){
-        return solver->taNoGir;
-}
+// bool verificaGir (TransQTSPV4 *solver){
+//         return solver->taNoGir;
+// }
 
-bool verificaPop (TransQTSPV4 *solver){
-        return solver->taNoPop;
-}
+// bool verificaPop (TransQTSPV4 *solver){
+//         return solver->taNoPop;
+// }
 
 void writeResult(
     std::ofstream &file,
@@ -313,24 +311,8 @@ std::string getAlgorithmName(TspSolver *solver)
     else if(dynamic_cast<TabuMemetic*>(solver)){
         return "Tabu Search Memetic";
 
-    }
-    else if(dynamic_cast<HGA*>(solver)){
-        return "HGA";
-    }
-     else if(dynamic_cast<TransQTSPV4*>(solver)){
-        return "TransQTSPV4";
-    }
-     else if(dynamic_cast<RemTransp*>(solver)){
-        return "RemTransp";
-    }
-     else if(dynamic_cast<TransQTSPV2*>(solver)){
-        return "TransQTSPV2";
-    }
-    else if(dynamic_cast<TransQTSPProbT*>(solver)){
-        return "TransQTSPProbT";
-    }
-    else if(dynamic_cast<TransQTSP*>(solver)){
-        return "TransQTSP";
+    }else if(dynamic_cast<RCL*>(solver)){
+        return "Restricted Candidate List";
     }
     
     return "AnotherGenetic";
@@ -339,10 +321,11 @@ std::string getAlgorithmName(TspSolver *solver)
 void run(TspSolver *solver, std::string graphFilename, std::ofstream &file)
 {
 
-
+    std::cout<<"vou runnar"<<std::endl;
 
     std::string solverName = getAlgorithmName(solver);
 
+    std::cout<<"o name "<< solverName <<std::endl;
 
     GraphIO graphio;
     graphio.read(graphFilename);
@@ -359,10 +342,10 @@ void run(TspSolver *solver, std::string graphFilename, std::ofstream &file)
         bool taNoPop = false;
         bool taNoGir = false;
 
-        if (auto* transSolver = dynamic_cast<TransQTSPV4*>(solver)){
-            taNoPop = transSolver->taNoPop;
-            taNoGir = transSolver->taNoGir;
-        }
+        // if (auto* transSolver = dynamic_cast<TransQTSPV4*>(solver)){
+        //     taNoPop = transSolver->taNoPop;
+        //     taNoGir = transSolver->taNoGir;
+        // }
 
         auto end = std::chrono::high_resolution_clock::now();
 
@@ -395,7 +378,7 @@ int Benchmark::evaluate()
 {
     std::vector<TspSolver *> algorithms;
 //     BruteForce *bf = new BruteForce();
-    Tabu* tabu = new Tabu(this->tabuTime,this->tabuAspirationTime,this->tabuMaxIter);
+    // Tabu* tabu = new Tabu(this->tabuTime,this->tabuAspirationTime,this->tabuMaxIter);
 //     NearestNeighborhood *nb = new NearestNeighborhood();
 //     CheapestInsertion *ci = new CheapestInsertion();
 //     BranchAndBound *bnb = new BranchAndBound();
@@ -407,12 +390,12 @@ int Benchmark::evaluate()
 //         this->mutationRate
 //     );
 // 
-     Memetic *mm = new Memetic(
-        this->maxEvaluations,
-        this->populationSize,
-        this->crossoverRate,
-        this->mutationRate
-    );
+    //  Memetic *mm = new Memetic(
+    //     this->maxEvaluations,
+    //     this->populationSize,
+    //     this->crossoverRate,
+    //     this->mutationRate
+    // );
 
     // AnotherGenetic *agls = new AnotherGenetic(
     //     this->populationSize,
@@ -435,31 +418,18 @@ int Benchmark::evaluate()
     //     this->crossoverRate
     // );
 
-    HGA* hgaAlgo = new HGA( 
-    this-> maxEvaluations,this->populationSize, this->crossoverRate, this->mutationRate); 
-
-    TransQTSP* trans = new TransQTSP(this-> maxEvaluations, this->populationSize, this->plasmidSize); 
-    TransQTSPProbT* transV1 = new TransQTSPProbT(this-> maxEvaluations, this->populationSize, this->probT, this->stepProb, this->plasmidSize);
-    TransQTSPV2* transV2 = new TransQTSPV2(this-> maxEvaluations, this->populationSize, this->probT, this->stepProb, this->plasmidSize, this->plasmidBank);
-    RemTransp* remTransp = new RemTransp(this-> maxEvaluations, this->populationSize, this->probT, this->stepProb, this->plasmidSize, this->plasmidBank);
-    TransQTSPV4* transV4 = new TransQTSPV4(this-> maxEvaluations, this->populationSize, this->probT, this->stepProb, this->plasmidSize, this->plasmidBank, this->plasmidMin, this->plasmidMax);
+    RCL *rcl =  new RCL();
+    std::cout<<"eu me crio" << std::endl;
+    algorithms.push_back(rcl);
+   std::cout<<"eu me push0" << std::endl;
     // algorithms.push_back(ci);
     // algorithms.push_back(mm);
     // algorithms.push_back(gi);
     // algorithms.push_back(nb);
     // algorithms.push_back(ci);
     // algorithms.push_back(tabu);
-    algorithms.push_back(hgaAlgo);
-    // algorithms.push_back(bnb);
-    // algorithms.push_back(bf);
-    // algorithms.push_back(ag);
-    // algorithms.push_back(agls);
-    // algorithms.push_back(tm);
-    // algorithms.push_back(trans);
-    // algorithms.push_back(transV1);
-    // algorithms.push_back(transV2);
-    //algorithms.push_back(remTransp);
-    algorithms.push_back(transV4);
+ 
+
     //  std::cout<< "eu sou o transv1  " << transV1->getProbT() << std::endl; 
     // std::vector<std::string> graphsPath = generateGraphs(5, 14);
 
@@ -539,80 +509,9 @@ int Benchmark::evaluate(std::string instance, std::string algorithmName)
             this->crossoverRate,
             this->mutationRate
         );
-    } else if (algorithmName.compare("hga") == 0){
-        std::cout << "hga" << std::endl;
-        algorithm = new HGA( 
-            this-> maxEvaluations,
-            this->populationSize,
-            this->crossoverRate,
-            this->mutationRate
-        );
-    
-    }else if(algorithmName.compare("transV4") == 0){
-        // std::cout << "remTransp" << std::endl;
-        algorithm = new TransQTSPV4( 
-            this-> maxEvaluations,
-            this->populationSize,
-            this->probT,
-            this->stepProb,
-            this->plasmidSize,
-            this->plasmidBank,
-            this->plasmidMin, 
-            this->plasmidMax
-        );
-    }
-    else if(algorithmName.compare("remTransp") == 0){
-        // std::cout << "remTransp" << std::endl;
-        algorithm = new RemTransp( 
-            this-> maxEvaluations,
-            this->populationSize,
-            this->probT,
-            this->stepProb,
-            this->plasmidSize,
-            this->plasmidBank
-        );
-    }
-     else if(algorithmName.compare("transQTSPV2") == 0){
-        std::cout << "transgeneticv2" << std::endl;
-        algorithm = new TransQTSPV2( 
-            this-> maxEvaluations,
-            this->populationSize,
-            this->probT,
-            this->stepProb,
-            this->plasmidSize,
-            this->plasmidBank
-        );
-    }
-    else if(algorithmName.compare("transQTSPProbT") == 0){
-        std::cout << "transgenetic probT" << std::endl;
-        algorithm = new TransQTSPProbT( 
-            this-> maxEvaluations,
-            this->populationSize,
-            this->probT,
-            this->stepProb,
-            this->plasmidSize
-        );
-    }
-     else if(algorithmName.compare("transQTSP") == 0){
-        std::cout << "transgenetic" << std::endl;
-        algorithm = new TransQTSP( 
-            this-> maxEvaluations,
-            this->populationSize,
-            this->plasmidSize
-        );
-
-    }
-     else if(algorithmName.compare("all_algorithms") == 0){
-        std::cout << "todos os algoritmos" << std::endl;
-        algorithm = new RemTransp( 
-            this-> maxEvaluations,
-            this->populationSize,
-            this->plasmidSize,
-            this->stepProb,
-            this->plasmidSize,
-            this->plasmidBank
-        );
-
+    }else if (algorithmName.compare("rcl") == 0){
+        // std::cout << "genetic" << std::endl;
+        algorithm = new RCL();
     }
      else {
         algorithm = new Tabu(this->tabuTime,this->tabuAspirationTime,this->tabuMaxIter);

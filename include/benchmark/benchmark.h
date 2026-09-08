@@ -23,6 +23,8 @@ private:
     int plasmidBank;
     double plasmidMin, plasmidMax;
 public: 
+    
+    Benchmark();
 
     Benchmark(
     int maxEvaluations,

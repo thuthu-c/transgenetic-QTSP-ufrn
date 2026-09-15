@@ -470,14 +470,17 @@ void runAllAlgorithms(int argc, char *argv[]) {
     double probT = std::atof(argv[5]);
     double stepProb = std::atof(argv[6]);
     double plasmidSize = std::atof(argv[7]);
-    double plasmidMin = std::atof(argv[8]);
-    double plasmidMax = std::atof(argv[9]);
+    int plasmidBank = std::atoi(argv[8]);
+    double plasmidMin = std::atof(argv[9]);
+    double plasmidMax = std::atof(argv[10]);
+    double probTmin = std::atof(argv[11]);
+    int variacaoSteps = std::atoi(argv[12]);
 
     // 2. Cria o Benchmark com TUDO inicializado perfeitamente!
-    Benchmark benchmark(maxEvaluations, populationSize, crossoverRate, mutationRate, probT, stepProb, plasmidSize, plasmidMin, plasmidMax);
+    Benchmark benchmark(maxEvaluations, populationSize, crossoverRate, mutationRate, probT, stepProb, plasmidSize, plasmidBank ,plasmidMin, plasmidMax, probTmin, variacaoSteps);
 
     // 3. Roda o benchmark completo (Gera grafos e salva no CSV)
-    if (argc == 10) {
+    if (argc == 13) {
         std::cout << "=> Iniciando Benchmark Completo para TODOS os algoritmos..." << std::endl;
         benchmark.evaluate();
     } 
@@ -635,23 +638,25 @@ void runTransQTSPV4irace(int argc, char *argv[]) {
     int plasmidBank = std::atoi(argv[6]);
     double plasmidMin = std::atof(argv[7]);
     double plasmidMax = std::atof(argv[8]);
+    double probTmin = std::atof(argv[9]);
+    int variacaoSteps = std::atoi(argv[10]);
 
-    if(argc == 9) {
+    if(argc == 11) {
         // Benchmark completo - pode deixar os prints
         std::cout << "\n======================================================\n";
         std::cout << "=> Iniciando Benchmark completo do TransQTSPV4..." << std::endl;
-        Benchmark benchmark(maxEvaluations, populationSize, probT, stepProb, plasmidSize, plasmidBank, plasmidMin, plasmidMax);
+        Benchmark benchmark(maxEvaluations, populationSize, probT, stepProb, plasmidSize, plasmidBank, plasmidMin, plasmidMax, probTmin, variacaoSteps);
         benchmark.evaluate();
     } 
-    else if (argc >= 9) {
-        std::string instance = argv[9];   
-        std::string algorithm = argv[10];  
+    else if (argc >= 11) {
+        std::string instance = argv[11];   
+        std::string algorithm = argv[12];  
         
         // COMENTE OU REMOVA ESTES PRINTS PARA O IRACE NÃO QUEBRAR!
         // std::cout << "\n======================================================\n";
         // std::cout << "=> Executando RemTransp na instancia: " << instance << std::endl;
         
-        Benchmark benchmark(maxEvaluations, populationSize, probT, stepProb, plasmidSize, plasmidBank, plasmidMin, plasmidMax);
+        Benchmark benchmark(maxEvaluations, populationSize, probT, stepProb, plasmidSize, plasmidBank, plasmidMin, plasmidMax, probTmin, variacaoSteps);
         benchmark.evaluate(instance, algorithm);
         
         // CERTIFIQUE-SE que dentro de `benchmark.evaluate()` o código imprima 

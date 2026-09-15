@@ -22,6 +22,7 @@
 #include "../../include/algorithms/trans_qtsp_v2.h"
 #include "../../include/algorithms/trans_qtsp_v3.h"
 #include "../../include/algorithms/trans_qtsp_v4.h"
+#include "../../include/algorithms/trans_qtsp_v5.h"
 
 Benchmark::Benchmark(
     int maxEvaluations,
@@ -154,6 +155,59 @@ Benchmark::Benchmark(
             this->plasmidBank = plasmidBank;
             this->plasmidMin = plasmidMin;
             this->plasmidMax = plasmidMax;
+        }
+
+            Benchmark::Benchmark(
+            int maxEvaluations,
+            int populationSize,
+            double probT,
+            double stepProb,
+            double plasmidSize,
+            int plasmidBank,
+            double plasmidMin, 
+            double plasmidMax,
+            double probTmin,
+            int variacaoSteps
+        ){
+            this->maxEvaluations = maxEvaluations;
+            this->populationSize = populationSize;
+            this->probT = probT;
+            this->stepProb = stepProb;
+            this->plasmidSize = plasmidSize;
+            this->plasmidBank = plasmidBank;
+            this->plasmidMin = plasmidMin;
+            this->plasmidMax = plasmidMax;
+            this->probTmin = probTmin;
+            this->variacaoSteps = variacaoSteps;
+        }
+
+
+            Benchmark::Benchmark(
+            int maxEvaluations,
+            int populationSize,
+            float crossoverRate,
+            float mutationRate,
+            double probT,
+            double stepProb,
+            double plasmidSize,
+            int plasmidBank,
+            double plasmidMin, 
+            double plasmidMax,
+            double probTmin,
+            int variacaoSteps
+        ){
+            this->maxEvaluations = maxEvaluations;
+            this->populationSize = populationSize;
+             this->crossoverRate = crossoverRate;
+            this->mutationRate = mutationRate;
+            this->probT = probT;
+            this->stepProb = stepProb;
+            this->plasmidSize = plasmidSize;
+            this->plasmidBank = plasmidBank;
+            this->plasmidMin = plasmidMin;
+            this->plasmidMax = plasmidMax;
+            this->probTmin = probTmin;
+            this->variacaoSteps = variacaoSteps;
         }
 
         Benchmark::Benchmark(
@@ -316,6 +370,8 @@ std::string getAlgorithmName(TspSolver *solver)
     }
     else if(dynamic_cast<HGA*>(solver)){
         return "HGA";
+    } else if(dynamic_cast<TransQTSPV5*>(solver)){
+        return "TransQTSPV5";
     }
      else if(dynamic_cast<TransQTSPV4*>(solver)){
         return "TransQTSPV4";
@@ -393,6 +449,7 @@ void run(TspSolver *solver, std::string graphFilename, std::ofstream &file)
 
 int Benchmark::evaluate()
 {
+    std::cout << "vou avaliar " << std::endl; 
     std::vector<TspSolver *> algorithms;
 //     BruteForce *bf = new BruteForce();
     Tabu* tabu = new Tabu(this->tabuTime,this->tabuAspirationTime,this->tabuMaxIter);
@@ -407,12 +464,12 @@ int Benchmark::evaluate()
 //         this->mutationRate
 //     );
 // 
-     Memetic *mm = new Memetic(
-        this->maxEvaluations,
-        this->populationSize,
-        this->crossoverRate,
-        this->mutationRate
-    );
+    //  Memetic *mm = new Memetic(
+    //     this->maxEvaluations,
+    //     this->populationSize,
+    //     this->crossoverRate,
+    //     this->mutationRate
+    // );
 
     // AnotherGenetic *agls = new AnotherGenetic(
     //     this->populationSize,
@@ -438,10 +495,11 @@ int Benchmark::evaluate()
     HGA* hgaAlgo = new HGA( 
     this-> maxEvaluations,this->populationSize, this->crossoverRate, this->mutationRate); 
 
-    TransQTSP* trans = new TransQTSP(this-> maxEvaluations, this->populationSize, this->plasmidSize); 
-    TransQTSPProbT* transV1 = new TransQTSPProbT(this-> maxEvaluations, this->populationSize, this->probT, this->stepProb, this->plasmidSize);
-    TransQTSPV2* transV2 = new TransQTSPV2(this-> maxEvaluations, this->populationSize, this->probT, this->stepProb, this->plasmidSize, this->plasmidBank);
-    RemTransp* remTransp = new RemTransp(this-> maxEvaluations, this->populationSize, this->probT, this->stepProb, this->plasmidSize, this->plasmidBank);
+    // TransQTSP* trans = new TransQTSP(this-> maxEvaluations, this->populationSize, this->plasmidSize); 
+    // TransQTSPProbT* transV1 = new TransQTSPProbT(this-> maxEvaluations, this->populationSize, this->probT, this->stepProb, this->plasmidSize);
+    // TransQTSPV2* transV2 = new TransQTSPV2(this-> maxEvaluations, this->populationSize, this->probT, this->stepProb, this->plasmidSize, this->plasmidBank);
+    // RemTransp* remTransp = new RemTransp(this-> maxEvaluations, this->populationSize, this->probT, this->stepProb, this->plasmidSize, this->plasmidBank);
+    TransQTSPV5* transV4withSteps = new TransQTSPV5(this-> maxEvaluations, this->populationSize, this->probT, this->stepProb, this->plasmidSize, this->plasmidBank, this->plasmidMin, this->plasmidMax, this->probTmin, this->variacaoSteps);
     TransQTSPV4* transV4 = new TransQTSPV4(this-> maxEvaluations, this->populationSize, this->probT, this->stepProb, this->plasmidSize, this->plasmidBank, this->plasmidMin, this->plasmidMax);
     // algorithms.push_back(ci);
     // algorithms.push_back(mm);
@@ -455,11 +513,12 @@ int Benchmark::evaluate()
     // algorithms.push_back(ag);
     // algorithms.push_back(agls);
     // algorithms.push_back(tm);
-    // algorithms.push_back(trans);
-    // algorithms.push_back(transV1);
-    // algorithms.push_back(transV2);
+    //algorithms.push_back(trans);
+    //algorithms.push_back(transV1);
+    //algorithms.push_back(transV2);
     //algorithms.push_back(remTransp);
     algorithms.push_back(transV4);
+    algorithms.push_back(transV4withSteps);
     //  std::cout<< "eu sou o transv1  " << transV1->getProbT() << std::endl; 
     // std::vector<std::string> graphsPath = generateGraphs(5, 14);
 
@@ -548,7 +607,22 @@ int Benchmark::evaluate(std::string instance, std::string algorithmName)
             this->mutationRate
         );
     
-    }else if(algorithmName.compare("transV4") == 0){
+    }else if(algorithmName.compare("transV5") == 0){
+        // std::cout << "remTransp" << std::endl;
+        algorithm = new TransQTSPV5( 
+            this-> maxEvaluations,
+            this->populationSize,
+            this->probT,
+            this->stepProb,
+            this->plasmidSize,
+            this->plasmidBank,
+            this->plasmidMin, 
+            this->plasmidMax,
+            this->probTmin,
+            this->variacaoSteps
+        );
+    }
+    else if(algorithmName.compare("transV4") == 0){
         // std::cout << "remTransp" << std::endl;
         algorithm = new TransQTSPV4( 
             this-> maxEvaluations,

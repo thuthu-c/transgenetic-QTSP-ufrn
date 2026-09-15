@@ -65,6 +65,8 @@ PLASMID_SIZE=0.2
 PLASMID_BANK=10
 PLASMID_MIN=0.1
 PLASMID_MAX=0.4
+PROB_T_MIN=0.2
+VARIACAO_STEPS=1000
 # Faz o parse das flags definidas no parameters.txt
 while [ "$1" != "" ]; do
     case $1 in
@@ -76,6 +78,9 @@ while [ "$1" != "" ]; do
         --plasmidBank ) shift; PLASMID_BANK=$1 ;;
         --plasmidMin ) shift; PLASMID_MIN=$1 ;;
         --plasmidMax ) shift; PLASMID_MAX=$1 ;;
+        --probTmin ) shift; PROB_T_MIN=$1 ;;
+        --variacaoSteps ) shift; VARIACAO_STEPS=$1 ;;
+        
         
 
     esac
@@ -85,5 +90,5 @@ done
 ALGORITHM="transV4"
 
 # Executa o seu C++ na exata ordem que o argc/argv espera (9 argumentos no total)
-# 1.maxEvals 2.popSize 3.probT 4.stepProb 5.plasmidSize 6.plasmidBank 7.plasmidMin 8. plasmidMax 9.instancia 10.algoritmo
-$EXE $MAX_EVALS $POP_SIZE $PROB_T $STEP_PROB $PLASMID_SIZE $PLASMID_BANK $PLASMID_MIN $PLASMID_MAX $INSTANCE $ALGORITHM
+# 1.maxEvals 2.popSize 3.probT 4.stepProb 5.plasmidSize 6.plasmidBank 7.plasmidMin 8. plasmidMax 9.probTmin 10. variacaoSteps 11. instancia 12.algoritmo
+$EXE $MAX_EVALS $POP_SIZE $PROB_T $STEP_PROB $PLASMID_SIZE $PLASMID_BANK $PLASMID_MIN $PLASMID_MAX $PROB_T_MIN $VARIACAO_STEPS $INSTANCE $ALGORITHM

@@ -452,7 +452,7 @@ int Benchmark::evaluate()
     std::cout << "vou avaliar " << std::endl; 
     std::vector<TspSolver *> algorithms;
 //     BruteForce *bf = new BruteForce();
-    Tabu* tabu = new Tabu(this->tabuTime,this->tabuAspirationTime,this->tabuMaxIter);
+ //   Tabu* tabu = new Tabu(this->tabuTime,this->tabuAspirationTime,this->tabuMaxIter);
 //     NearestNeighborhood *nb = new NearestNeighborhood();
 //     CheapestInsertion *ci = new CheapestInsertion();
 //     BranchAndBound *bnb = new BranchAndBound();
@@ -500,7 +500,7 @@ int Benchmark::evaluate()
     // TransQTSPV2* transV2 = new TransQTSPV2(this-> maxEvaluations, this->populationSize, this->probT, this->stepProb, this->plasmidSize, this->plasmidBank);
     // RemTransp* remTransp = new RemTransp(this-> maxEvaluations, this->populationSize, this->probT, this->stepProb, this->plasmidSize, this->plasmidBank);
     TransQTSPV5* transV4withSteps = new TransQTSPV5(this-> maxEvaluations, this->populationSize, this->probT, this->stepProb, this->plasmidSize, this->plasmidBank, this->plasmidMin, this->plasmidMax, this->probTmin, this->variacaoSteps);
-    TransQTSPV4* transV4 = new TransQTSPV4(this-> maxEvaluations, this->populationSize, this->probT, this->stepProb, this->plasmidSize, this->plasmidBank, this->plasmidMin, this->plasmidMax);
+    //TransQTSPV4* transV4 = new TransQTSPV4(this-> maxEvaluations, this->populationSize, this->probT, this->stepProb, this->plasmidSize, this->plasmidBank, this->plasmidMin, this->plasmidMax);
     // algorithms.push_back(ci);
     // algorithms.push_back(mm);
     // algorithms.push_back(gi);
@@ -517,7 +517,7 @@ int Benchmark::evaluate()
     //algorithms.push_back(transV1);
     //algorithms.push_back(transV2);
     //algorithms.push_back(remTransp);
-    algorithms.push_back(transV4);
+    // algorithms.push_back(transV4);
     algorithms.push_back(transV4withSteps);
     //  std::cout<< "eu sou o transv1  " << transV1->getProbT() << std::endl; 
     // std::vector<std::string> graphsPath = generateGraphs(5, 14);
@@ -580,6 +580,7 @@ int Benchmark::evaluate(std::string instance, std::string algorithmName)
 {
 
     TspSolver* algorithm;
+
 
     if(algorithmName.compare("memetic") == 0) {
         std::cout << "memetic" << std::endl;

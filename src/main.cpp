@@ -485,9 +485,9 @@ void runAllAlgorithms(int argc, char *argv[]) {
         benchmark.evaluate();
     } 
     // 4. Roda apenas uma instancia especifica (Para o iRace)
-    else if (argc >= 10) {
-        std::string instance = argv[8];
-        std::string algorithm = argv[9];
+    else if (argc >= 14) {
+        std::string instance = argv[14];
+        std::string algorithm = argv[13];
         benchmark.evaluate(instance, algorithm);
     }
 }

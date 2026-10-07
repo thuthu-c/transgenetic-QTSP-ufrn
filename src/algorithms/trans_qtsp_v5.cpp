@@ -55,15 +55,11 @@ TransQTSPV5::TransQTSPV5(int maxEvaluations, int populationSize, double probT, d
 }
 
 std::vector<int> TransQTSPV5::run(Graph& graphInput){
-    std::cout<<"entrei no run do V5" << std::endl;
     this->numEvaluation = 0;
     graph = &graphInput;
     if(graph->getNumVertex() < 100){
         populationSize = std::min(graph->getNumVertex(), populationSize);
     }
-    
-
-    std::cout<< "o tamanho da populacao eh " << this->populationSize << std::endl;
 
   
     population = generate_population(graph);
@@ -81,9 +77,17 @@ std::vector<int> TransQTSPV5::run(Graph& graphInput){
         
         evaluatePopulation(population);
         
+        // adicionado depois do teste principal;
+         std::sort(population.begin(), population.end(), [](const Individual &a, const Individual &b){
+            return a.biasedFitness < b.biasedFitness;
+        });
+       
+        int tam_gir = 0.5 * this->populationSize;
+        
 
         // a escolha dos elites eh baseada no biased fitness 
         std::vector<Individual*> elites;
+
         for (auto& i : population) elites.push_back(&i);
         
         // a ordenacao do gir, eh baseada no custo (funcao objetivo)
@@ -92,8 +96,7 @@ std::vector<int> TransQTSPV5::run(Graph& graphInput){
         });
 
         girConverted.clear();
-        int tam_gir = 0.5 * this->populationSize;
-        std::cout<< "o tamanho do gir eh " << tam_gir << std::endl;
+
         for(int i = 0; i < tam_gir; i++) {
             girConverted.push_back(elites[i]->tour);
         }
@@ -109,14 +112,6 @@ std::vector<int> TransQTSPV5::run(Graph& graphInput){
                 plasmidBank.push_back(generate_plasmid(girConverted, plasmidSize));
             }
 
-            // std::cout<< "o banco de plasmideo eh: " << std::endl;
-
-            // for(auto p : plasmidBank){
-            //     for(auto v :p.genes){
-            //         std::cout << v << " ";
-            //     }
-            //     std::cout << std::endl;
-            // }
         }
     };
 

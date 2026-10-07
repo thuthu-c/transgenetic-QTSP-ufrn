@@ -507,21 +507,17 @@ TransQTSP::Plasmid TransQTSP::generate_plasmid(std::vector<std::vector<int>>& gi
 
 std::vector<int> TransQTSP::m1(const Plasmid &p, int tamanho_solucao, const std::vector<int>& solution) {
 
-    // std::cout<< "solucao antes da transcricao: " << std::endl;
-    // for(auto s : solution) std::cout << s << " ";
-    // std::cout<< std::endl;
     std::vector<int> novo_ciclo;
     novo_ciclo.reserve(tamanho_solucao);
 
     if (p.genes.empty()) return solution; 
 
     int primeiro_gene = p.genes[0];
-    // std::cout << "o primeiro gene do plasmideo eh " << primeiro_gene << std::endl; 
+
     
     std::unordered_set<int> plasmid_genes(p.genes.begin(), p.genes.end());
 
     for (int v : solution) {
-        // std::cout<<"o vertice atual eh " << v << std::endl;
         if (v == primeiro_gene) {
             novo_ciclo.insert(novo_ciclo.end(), p.genes.begin(), p.genes.end());
         } 
@@ -529,10 +525,6 @@ std::vector<int> TransQTSP::m1(const Plasmid &p, int tamanho_solucao, const std:
             novo_ciclo.push_back(v);
         }
     }
-
-    // std::cout<< "solucao depois da transcricao: " << std::endl;
-    // for(auto n : novo_ciclo) std::cout << n << " ";
-    // std::cout<< std::endl;  
 
     return novo_ciclo;
 }
@@ -574,19 +566,26 @@ std::vector<int> TransQTSP::best4opt(const std::vector<int>& solution)
     if (n < 8)
         return std::vector<int>(solution);
 
-    // Tabelas da DP
+    // Tabelas da DP    
+
     // F[i2][j1] armazena o melhor custo parcial
-    // Parent[i2][j1] armazena qual i1 gerou esse custo (para reconstrução)
     std::vector<std::vector<double>> F(n, std::vector<double>(n, 1e18));
+    // Parent[i2][j1] armazena qual i1 gerou esse custo (para reconstrução)
     std::vector<std::vector<int>> parent_i1(n, std::vector<int>(n, -1));
 
-    // Inicialização (Algoritmo 2 linha 3) - Corrigido índice 7 para 2 (base 0) que equivale ao 3 do artigo
+
+
+    // o que isso faz? 
+    // preenche a tabela F com o custo dos movimentos, assumindo i1 como 0 e j1 a partir de 4
+    // o D20 calcula a diferenca entre os arcos removidos e os adicionados;
+    // a ideia eh ter na tabela F o custo dos movimentos e na tabela parent_i1 guardar o valor de i1 para aquele movimento
     for (int j1 = 4; j1 <= n - 4; ++j1)
     {
         F[2][j1] = D2O(0, j1, solution); // Assume i1 = 0
         parent_i1[2][j1] = 0;
     }
 
+// aqui segue a mesma logica do codigo de cima, mas agora pro i2 e j2
     // Recursão (Algoritmo 2 linhas 4-6)
     for (int i2 = 3; i2 <= n - 5; ++i2)
     {
@@ -595,8 +594,6 @@ std::vector<int> TransQTSP::best4opt(const std::vector<int>& solution)
             double val_stay = F[i2 - 1][j1];
             double val_new = D2O(i2 - 1, j1, solution); // Novo corte
 
-            // Simplificação da recorrência: escolhe o melhor entre estender ou novo corte
-            // Nota: A lógica exata da Eq 13 pode variar, mas a ideia é minimizar custo
             if (val_new < val_stay)
             {
                 F[i2][j1] = val_new;
@@ -614,11 +611,14 @@ std::vector<int> TransQTSP::best4opt(const std::vector<int>& solution)
     double best_improvement = -0.000001; // Só aceita se melhorar (negativo)
     int best_i1 = -1, best_i2 = -1, best_j1 = -1, best_j2 = -1;
 
+
+    // aqui eh o percorrimento da tabela de valores, comparando ateh encontrar o melhor movimento
+    // note que: eh testado os valores de i2, j1 e j2, mas o valor i1 eh acessado na tabela parent_i1
+    // que ja armazena os custos do movimento daquele i1
     for (int i2 = 3; i2 <= n - 5; ++i2)
     {
         for (int j2 = i2 + 5; j2 <= n - 1; ++j2)
         {
-            // Varredura simplificada para achar o melhor j1 compatível
             for (int j1 = i2 + 2; j1 <= j2 - 2; ++j1)
             {
                 double current_delta = D2O(i2, j2, solution) + F[i2][j1];
